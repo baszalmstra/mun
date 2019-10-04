@@ -3,7 +3,7 @@ jobs:
   parameters:
     displayName: cargo test
     name: cargo_test_stable
-    cross: true 
+    #cross: true 
     rust: stable
 
 - template: azure-test.yml

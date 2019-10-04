@@ -2,28 +2,36 @@ variables:
   RUSTFLAGS: -Dwarnings
 
 stages:
-  - stage: check
-    displayName: Compilation check
-    dependsOn: []
-    jobs:
-      # Cargo Check
-      - template: ci/azure-cargo-check.yml
-        parameters:
-          name: cargo_check
-          displayName: cargo check
-  
-  - stage: style
-    displayName: Style linting
-    dependsOn: ['check']
-    jobs:
-      # Check formatting
-      - template: ci/azure-rustfmt.yml
-        parameters:
-          name: rustfmt
-          displayName: cargo fmt
+  # - stage: check
+  #   displayName: Compilation check
+  #   dependsOn: []
+  #   jobs:
+  #     # Cargo Check
+  #     - template: ci/azure-cargo-check.yml
+  #       parameters:
+  #         name: cargo_check
+  #         displayName: cargo check
 
-  - stage: test
-    displayName: Test suite
-    dependsOn: ['check']
+  # - stage: test
+  #   displayName: Test suite
+  #   dependsOn: ['check']
+  #   jobs:
+  #     - template: ci/azure-tests.yml
+
+  # - stage: style
+  #   displayName: Style linting
+  #   dependsOn: ['check']
+  #   jobs:
+  #     # Check formatting
+  #     - template: ci/azure-rustfmt.yml
+  #       parameters:
+  #         name: rustfmt
+  #         displayName: cargo fmt
+
+  - stage: coverage
+    displayName: Code Coverage
+    # dependsOn: ['test']
     jobs:
-      - template: ci/azure-tests.yml
+      - template: ci/azure-coverage.yml
+        parameters:
+          codecov_token: $(CODECOV_TOKEN)

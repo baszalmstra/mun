@@ -1,0 +1,25 @@
+parameters:
+  rust: stable
+
+jobs:
+- job: ${{ parameters.name }}
+  displayName: tarpaulin
+  pool:
+    vmImage: ubuntu-18.04
+  container:
+    image: xd009642/tarpaulin:latest
+    options: --security-opt seccomp=unconfined
+  steps:
+  - checkout: self
+    submodules: true
+
+  - script: apt install llvm-7 llvm-7-* lld-7
+    displayName: "Install LLVM (*nix)"
+
+  - script: cargo tarpaulin --out Xml
+    displayName: Run tarpaulin
+
+  - script: bash <(curl -s https://codecov.io/bash)
+    displayName: Upload results to codecov
+    env:
+      CODECOV_TOKEN: ${{ parameters.codecov_token }}

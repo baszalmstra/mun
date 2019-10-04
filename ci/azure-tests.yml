@@ -1,18 +1,19 @@
 jobs:
 - template: azure-test.yml
   parameters:
+    displayName: cargo test
     name: cargo_test_stable
-    cross: false
+    cross: true 
     rust: stable
 
 - template: azure-test.yml
   parameters:
+    displayName: cargo test
     name: cargo_test_beta
-    cross: false
     rust: beta
 
 - template: azure-test.yml
   parameters:
+    displayName: cargo test
     name: cargo_test_nightly
-    cross: false
     rust: nightly

@@ -1,6 +1,7 @@
 # defaults for any parameters that aren't specified
 parameters:
   llvm_version: 7
+  llvm_version_windows: 7.0.1
 
 steps:
   # Linux
@@ -11,21 +12,20 @@ steps:
       LLVM_VERSION: ${{parameters.llvm_version}}
     displayName: "Install LLVM (*nix)"
     condition: eq(variables['Agent.OS'], 'Linux')
-  # # Windows.
-  # - script: |
-  #     curl -sSf -o rustup-init.exe https://win.rustup.rs
-  #     rustup-init.exe -y --default-toolchain none
-  #     set PATH=%PATH%;%USERPROFILE%\.cargo\bin
-  #     rustup toolchain install %RUSTUP_TOOLCHAIN%
-  #     rustup default %RUSTUP_TOOLCHAIN%
-  #     echo "##vso[task.setvariable variable=PATH;]%PATH%;%USERPROFILE%\.cargo\bin"
-  #   env:
-  #     RUSTUP_TOOLCHAIN: ${{parameters.rust_version}}
-  #   displayName: "Install rust (windows)"
-  #   condition: eq(variables['Agent.OS'], 'Windows_NT')
-  # # All platforms.
-  # - script: |
-  #       rustup toolchain list
-  #       rustc -Vv
-  #       cargo -V
-  #   displayName: Query rust and cargo versions
+
+  # Darwin
+  - script: |
+      set -e
+      brew install llvm@$LLVM_VERSION
+    env:
+      LLVM_VERSION: ${{parameters.llvm_version}}
+    displayName: "Install LLVM (macOS)"
+    condition: eq(variables['Agent.OS'], 'Darwin')
+    
+  # Windows.
+  - script: |
+      choco install llvm --version=%LLVM_VERSION%
+    env:
+      LLVM_VERSION: ${{parameters.llvm_version_windows}}
+    displayName: "Install LLVM (windows)"
+    condition: eq(variables['Agent.OS'], 'Windows_NT')

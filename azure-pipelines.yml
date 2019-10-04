@@ -5,10 +5,20 @@ jobs:
   # Check formatting
   - template: ci/azure-rustfmt.yml
     parameters:
-      rust: stable
       name: rustfmt
+      displayName: Check formatting
 
+  # Cargo Check
   - template: ci/azure-cargo-check.yml
     parameters:
-      rust: stable
-      name: check 
+      name: cargo_check
+      displayName: Cargo check
+
+  # # Test stable
+  # - template: ci/azure-test.yml
+  #   parameters:
+  #     dependsOn:
+  #       - cargo_check
+  #     name: cargo_test_stable
+  #     displayName: Cargo test
+  #     cross: true # Test on Windows and macOS

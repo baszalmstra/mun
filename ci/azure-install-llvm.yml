@@ -1,0 +1,31 @@
+# defaults for any parameters that aren't specified
+parameters:
+  llvm_version: 7
+
+steps:
+  # Linux
+  - script: |
+      set -e
+      sudo apt install llvm-$LLVM_VERSION llvm-$LLVM_VERSION-* lld-$LLVM_VERSION
+    env:
+      LLVM_VERSION: ${{parameters.llvm_version}}
+    displayName: "Install LLVM (*nix)"
+    condition: eq(variables['Agent.OS'], 'Linux')
+  # # Windows.
+  # - script: |
+  #     curl -sSf -o rustup-init.exe https://win.rustup.rs
+  #     rustup-init.exe -y --default-toolchain none
+  #     set PATH=%PATH%;%USERPROFILE%\.cargo\bin
+  #     rustup toolchain install %RUSTUP_TOOLCHAIN%
+  #     rustup default %RUSTUP_TOOLCHAIN%
+  #     echo "##vso[task.setvariable variable=PATH;]%PATH%;%USERPROFILE%\.cargo\bin"
+  #   env:
+  #     RUSTUP_TOOLCHAIN: ${{parameters.rust_version}}
+  #   displayName: "Install rust (windows)"
+  #   condition: eq(variables['Agent.OS'], 'Windows_NT')
+  # # All platforms.
+  # - script: |
+  #       rustup toolchain list
+  #       rustc -Vv
+  #       cargo -V
+  #   displayName: Query rust and cargo versions

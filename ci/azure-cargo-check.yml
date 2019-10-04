@@ -2,16 +2,20 @@ parameters:
   rust_version: stable
 
 jobs:
-- job: ${{ parameters.name }}
-  displayName: ${{ parameters.displayName }}
-  pool:
-    vmImage: ubuntu-16.04
-  steps:
-  - template: azure-install-rust.yml
+  - job: ${{ parameters.name }}
+    displayName: Cargo check
+    pool:
+      vmImage: ubuntu-16.04
+    steps:
+    - checkout: self
+      submodules: true
+    - template: azure-install-rust.yml
+      parameters:
+        rust_version: ${{ parameters.rust }}
 
-  - script: cargo check 
-    displayName: Check features
+    - script: cargo check 
+      displayName: Check features
 
-  - ${{ if parameters.benches }}:
-    - script: cargo check --benches --all
-      displayName: Check benchmarks
+    - ${{ if parameters.benches }}:
+      - script: cargo check --benches --all
+        displayName: Check benchmarks

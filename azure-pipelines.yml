@@ -1,9 +1,5 @@
-trigger: ["master"]
-pr: ["master"]
-
 variables:
   RUSTFLAGS: -Dwarnings
-
 
 jobs:
   # Check formatting

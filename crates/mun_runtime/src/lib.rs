@@ -74,10 +74,10 @@ impl MunRuntime {
         Ok(())
     }
 
-    /// Removes the assembly corresponding to the library at `library_path`.
-    fn remove_assembly(&mut self, library_path: &Path) {
-        self.assemblies.remove(library_path);
-    }
+//    /// Removes the assembly corresponding to the library at `library_path`.
+//    fn remove_assembly(&mut self, library_path: &Path) {
+//        self.assemblies.remove(library_path);
+//    }
 
     /// Retrieves the function information corresponding to `function_name`, if available.
     pub fn get_function_info(&self, function_name: &str) -> Option<&FunctionInfo> {

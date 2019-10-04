@@ -11,4 +11,4 @@ jobs:
   - template: ci/azure-cargo-check.yml
     parameters:
       rust: stable
-      name: cargo check 
+      name: check 

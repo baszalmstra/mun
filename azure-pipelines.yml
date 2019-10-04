@@ -1,24 +1,29 @@
 variables:
   RUSTFLAGS: -Dwarnings
 
-jobs:
-  # Check formatting
-  - template: ci/azure-rustfmt.yml
-    parameters:
-      name: rustfmt
-      displayName: Check formatting
+stages:
+  - stage: check
+    displayName: Compilation check
+    dependsOn: []
+    jobs:
+      # Cargo Check
+      - template: ci/azure-cargo-check.yml
+        parameters:
+          name: cargo_check
+          displayName: cargo check
+  
+  - stage: style
+    displayName: Style linting
+    dependsOn: ['check']
+    jobs:
+      # Check formatting
+      - template: ci/azure-rustfmt.yml
+        parameters:
+          name: rustfmt
+          displayName: cargo fmt
 
-  # Cargo Check
-  - template: ci/azure-cargo-check.yml
-    parameters:
-      name: cargo_check
-      displayName: Cargo check
-
-  # Test stable
-  - template: ci/azure-test.yml
-    parameters:
-      dependsOn:
-        - cargo_check
-      name: cargo_test_stable
-      displayName: Cargo test
-      #cross: true # Test on Windows and macOS
+  - stage: test
+    displayName: Test suite
+    dependsOn: ['check']
+    jobs:
+      - template: ci/azure-tests.yml

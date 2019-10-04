@@ -1,9 +1,9 @@
 parameters:
-  rust_version: stable
+  rust: stable
 
 jobs:
 - job: ${{ parameters.name }}
-  displayName: ${{ parameters.displayName }} ${{parameters.rust_version}}
+  displayName: ${{ parameters.displayName }} ${{parameters.rust}}
   strategy:
     matrix:
       Linux:
@@ -18,7 +18,12 @@ jobs:
     vmImage: $(vmImage)
 
   steps:
+  - checkout: self
+    submodules: true
+
   - template: azure-install-rust.yml
+    parameters: 
+      rust: ${{ parameters.rust }}
 
   - template: azure-install-llvm.yml
 

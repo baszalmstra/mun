@@ -1,0 +1,30 @@
+parameters:
+  rust_version: stable
+
+jobs:
+- job: ${{ parameters.name }}
+  displayName: ${{ parameters.displayName }} ${{parameters.rust_version}}
+  strategy:
+    matrix:
+      Linux:
+        vmImage: ubuntu-18.04
+
+      ${{ if parameters.cross }}:
+        MacOS:
+          vmImage: macOS-10.13
+        Windows:
+          vmImage: vs2017-win2016
+  pool:
+    vmImage: $(vmImage)
+
+  steps:
+  - template: azure-install-rust.yml
+
+  - template: azure-install-llvm.yml
+
+  - script: |
+          cargo test -- --test-threads=1
+    env:
+      LOOM_MAX_DURATION: 10
+      CI: 'True'
+    displayName: cargo test

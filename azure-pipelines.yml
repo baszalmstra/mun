@@ -14,11 +14,11 @@ jobs:
       name: cargo_check
       displayName: Cargo check
 
-  # # Test stable
-  # - template: ci/azure-test.yml
-  #   parameters:
-  #     dependsOn:
-  #       - cargo_check
-  #     name: cargo_test_stable
-  #     displayName: Cargo test
-  #     cross: true # Test on Windows and macOS
+  # Test stable
+  - template: ci/azure-test.yml
+    parameters:
+      dependsOn:
+        - cargo_check
+      name: cargo_test_stable
+      displayName: Cargo test
+      #cross: true # Test on Windows and macOS

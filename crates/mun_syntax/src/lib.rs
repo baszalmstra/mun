@@ -18,6 +18,9 @@ mod syntax_error;
 mod syntax_node;
 mod syntax_text;
 
+#[cfg(test)]
+mod tests;
+
 use std::{fmt::Write, marker::PhantomData, sync::Arc};
 
 pub use crate::{

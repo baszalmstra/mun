@@ -18,20 +18,13 @@ jobs:
   - template: azure-install-llvm.yml
 
   - script: |
-      set -e
-      wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz
-      tar xzf master.tar.gz
-      cd kcov-master
-      mkdir build
-      cd build
-      cmake ..
-      make
-      sudo make install
-
-  - script: cargo install cargo-kcov
+      cargo install cargo-kcov
+      sudo apt-get install cmake g++ pkg-config jq
+      sudo apt-get install libcurl4-openssl-dev libelf-dev libdw-dev binutils-dev libiberty-dev
+      cargo kcov --print-install-kcov-sh | sh      
     displayName: "Install kcov"
 
-  - script: cargo kcov
+  - script: cargo kcov --all
     displayName: Run kcov
 
   - script: bash <(curl -s https://codecov.io/bash)

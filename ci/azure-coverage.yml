@@ -6,18 +6,33 @@ jobs:
   displayName: tarpaulin
   pool:
     vmImage: ubuntu-18.04
-  container:
-    image: xd009642/tarpaulin:latest
-    options: --security-opt seccomp=unconfined
+
   steps:
   - checkout: self
     submodules: true
 
-  - script: apt install llvm-7 llvm-7-* lld-7
-    displayName: "Install LLVM (*nix)"
+  - template: azure-install-rust.yml
+    parameters: 
+      rust: ${{ parameters.rust }}
 
-  - script: cargo tarpaulin --out Xml
-    displayName: Run tarpaulin
+  - template: azure-install-llvm.yml
+
+  - script: |
+      set -e
+      wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz
+      tar xzf master.tar.gz
+      cd kcov-master
+      mkdir build
+      cd build
+      cmake ..
+      make
+      sudo make install
+
+  - script: cargo install cargo-kcov
+    displayName: "Install kcov"
+
+  - script: cargo kcov
+    displayName: Run kcov
 
   - script: bash <(curl -s https://codecov.io/bash)
     displayName: Upload results to codecov

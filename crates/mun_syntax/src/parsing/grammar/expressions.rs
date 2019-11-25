@@ -131,6 +131,7 @@ fn expr_bp(p: &mut Parser, r: Restrictions, bp: u8) -> Option<CompletedMarker> {
     };
 
     loop {
+        let is_range = p.at(T![..]) || p.at(T![..=]);
         let (op_bp, op) = current_op(p);
         if op_bp < bp {
             break;
@@ -139,8 +140,18 @@ fn expr_bp(p: &mut Parser, r: Restrictions, bp: u8) -> Option<CompletedMarker> {
         let m = lhs.precede(p);
         p.bump(op);
 
+        if is_range {
+            let has_trailing_expression =
+                p.at_ts(EXPR_FIRST) && !(r.forbid_structs && p.at(T!['{']));
+            if !has_trailing_expression {
+                // No RHS
+                lhs = m.complete(p, RANGE_EXPR);
+                break;
+            }
+        }
+
         expr_bp(p, r, op_bp + 1);
-        lhs = m.complete(p, BIN_EXPR);
+        lhs = m.complete(p, if is_range { RANGE_EXPR } else { BIN_EXPR });
     }
 
     Some(lhs)
@@ -163,6 +174,8 @@ fn current_op(p: &Parser) -> (u8, SyntaxKind) {
         T![>] => (5, T![>]),
         T![<] if p.at(T![<=]) => (5, T![<=]),
         T![<] => (5, T![<]),
+        T![.] if p.at(T![..=]) => (2, T![..=]),
+        T![.] if p.at(T![..]) => (2, T![..]),
         _ => (0, T![_]),
     }
 }
@@ -176,6 +189,18 @@ fn lhs(p: &mut Parser, r: Restrictions) -> Option<CompletedMarker> {
             PREFIX_EXPR
         }
         _ => {
+            // Check full range expression (ranges starting with .. or ..=, so no start expression)
+            for &op in [T![..=], T![..]].iter() {
+                if p.at(op) {
+                    m = p.start();
+                    p.bump(op);
+                    if p.at_ts(EXPR_FIRST) && !(r.forbid_structs && p.at(T!['{'])) {
+                        expr_bp(p, r, 2);
+                    }
+                    return Some(m.complete(p, RANGE_EXPR));
+                }
+            }
+
             let lhs = atom_expr(p, r)?;
             return Some(postfix_expr(p, lhs));
         }

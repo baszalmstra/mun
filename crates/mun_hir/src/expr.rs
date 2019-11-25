@@ -10,7 +10,9 @@ use crate::code_model::src::{HasSource, Source};
 use crate::name::AsName;
 use crate::type_ref::{TypeRef, TypeRefBuilder, TypeRefId, TypeRefMap, TypeRefSourceMap};
 pub use mun_syntax::ast::PrefixOp as UnaryOp;
-use mun_syntax::ast::{ArgListOwner, BinOp, LoopBodyOwner, NameOwner, TypeAscriptionOwner};
+use mun_syntax::ast::{
+    ArgListOwner, BinOp, LoopBodyOwner, NameOwner, RangeOp, TypeAscriptionOwner,
+};
 use mun_syntax::{ast, AstNode, AstPtr, T};
 use rustc_hash::FxHashMap;
 use std::ops::Index;
@@ -171,6 +173,51 @@ pub enum Literal {
 
 impl Eq for Literal {}
 
+/// Describes a Range expression
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum Range {
+    // `start..end`
+    Expr(ExprId, ExprId),
+
+    // `start..`
+    FromExpr(ExprId),
+
+    // `..end`
+    ToExpr(ExprId),
+
+    // `..`
+    Full,
+
+    // `start..=end`
+    InclusiveExpr(ExprId, ExprId),
+
+    // `..=end`
+    ToInclusiveExpr(ExprId),
+}
+
+impl Range {
+    /// Returns the starting expression of the range or `None` if no such expression exists.
+    pub fn start(&self) -> Option<&ExprId> {
+        match self {
+            Range::Expr(start, _) | Range::FromExpr(start) | Range::InclusiveExpr(start, _) => {
+                Some(start)
+            }
+            _ => None,
+        }
+    }
+
+    /// Returns the ending expression of the range or `None` if no such expression exists.
+    pub fn end(&self) -> Option<&ExprId> {
+        match self {
+            Range::Expr(_, end)
+            | Range::ToExpr(end)
+            | Range::InclusiveExpr(_, end)
+            | Range::ToInclusiveExpr(end) => Some(end),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Expr {
     /// Used if the syntax tree does not have a required expression piece
@@ -212,6 +259,7 @@ pub enum Expr {
         body: ExprId,
     },
     Literal(Literal),
+    Range(Range),
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -312,6 +360,26 @@ impl Expr {
                 f(*condition);
                 f(*body);
             }
+            Expr::Range(r) => match r {
+                Range::Expr(a, b) => {
+                    f(*a);
+                    f(*b);
+                }
+                Range::FromExpr(a) => {
+                    f(*a);
+                }
+                Range::ToExpr(a) => {
+                    f(*a);
+                }
+                Range::Full => {}
+                Range::InclusiveExpr(a, b) => {
+                    f(*a);
+                    f(*b);
+                }
+                Range::ToInclusiveExpr(a) => {
+                    f(*a);
+                }
+            },
         }
     }
 }
@@ -622,6 +690,7 @@ where
                 };
                 self.alloc_expr(Expr::Call { callee, args }, syntax_ptr)
             }
+            ast::ExprKind::RangeExpr(e) => self.collect_range_expr(e),
         }
     }
 
@@ -678,6 +747,32 @@ where
         let condition = self.collect_condition_opt(expr.condition());
         let body = self.collect_block_opt(expr.loop_body());
         self.alloc_expr(Expr::While { condition, body }, syntax_node_ptr)
+    }
+
+    fn collect_range_expr(&mut self, expr: ast::RangeExpr) -> ExprId {
+        let syntax_node_ptr = AstPtr::new(&expr.clone().into());
+        let op = expr.op_kind().unwrap_or(RangeOp::Exclusive);
+        let start = expr.start().map(|e| self.collect_expr(e));
+
+        // Inclusive range must have an end expression
+        let end = if op == RangeOp::Inclusive {
+            expr.end().map(|e| self.collect_expr(e))
+        } else {
+            Some(self.collect_expr_opt(expr.end()))
+        };
+
+        let range = match (start, op, end) {
+            (Some(start), RangeOp::Exclusive, Some(end)) => Range::Expr(start, end),
+            (Some(start), RangeOp::Exclusive, None) => Range::FromExpr(start),
+            (None, RangeOp::Exclusive, Some(end)) => Range::ToExpr(end),
+            (None, RangeOp::Exclusive, None) => Range::Full,
+            (None, RangeOp::Inclusive, None) => Range::Full, // This is a syntax error, assume inclusive was meant
+            (Some(start), RangeOp::Inclusive, Some(end)) => Range::InclusiveExpr(start, end),
+            (None, RangeOp::Inclusive, Some(end)) => Range::ToInclusiveExpr(end),
+            (Some(start), RangeOp::Inclusive, None) => Range::FromExpr(start), // This is a syntax error assume inclusive range was meant
+        };
+
+        self.alloc_expr(Expr::Range(range), syntax_node_ptr)
     }
 
     fn finish(mut self) -> (Body, BodySourceMap) {

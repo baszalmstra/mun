@@ -125,6 +125,7 @@ Grammar(
         "WHILE_EXPR",
         "LOOP_EXPR",
         "BREAK_EXPR",
+        "RANGE_EXPR",
         "CONDITION",
 
         "BIND_PAT",
@@ -198,6 +199,7 @@ Grammar(
         "PathExpr": (options: ["Path"]),
         "PrefixExpr": (options: ["Expr"]),
         "BinExpr": (),
+        "RangeExpr": (),
         "Literal": (),
         "ParenExpr": (options: ["Expr"]),
         "CallExpr": (
@@ -228,6 +230,7 @@ Grammar(
                 "ReturnExpr",
                 "BreakExpr",
                 "BlockExpr",
+                "RangeExpr",
             ]
         ),
 

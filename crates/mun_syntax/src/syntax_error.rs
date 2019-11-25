@@ -34,6 +34,7 @@ impl fmt::Display for SyntaxError {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum SyntaxErrorKind {
     ParseError(ParseError),
+    InclusiveRangeMissingEnd,
 }
 
 impl fmt::Display for SyntaxErrorKind {
@@ -41,6 +42,7 @@ impl fmt::Display for SyntaxErrorKind {
         use self::SyntaxErrorKind::*;
         match self {
             ParseError(msg) => write!(f, "{}", msg.0),
+            InclusiveRangeMissingEnd => write!(f, "an inclusive range must have an end expression"),
         }
     }
 }

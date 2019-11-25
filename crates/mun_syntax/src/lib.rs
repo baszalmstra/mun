@@ -124,8 +124,9 @@ pub use crate::ast::SourceFile;
 
 impl SourceFile {
     pub fn parse(text: &str) -> Parse<SourceFile> {
-        let (green, errors) = parsing::parse_text(text);
-        //errors.extend(validation::validate(&SourceFile::new(green.clone())));
+        let (green, mut errors) = parsing::parse_text(text);
+        let root = SyntaxNode::new_root(green.clone());
+        errors.extend(validation::validate(&root));
         Parse {
             green,
             errors: Arc::new(errors),
@@ -133,6 +134,35 @@ impl SourceFile {
         }
     }
 }
+
+/// Matches a `SyntaxNode` against an `ast` type.
+///
+/// # Example:
+///
+/// ```ignore
+/// match_ast! {
+///     match node {
+///         ast::CallExpr(it) => { ... },
+///         ast::MethodCallExpr(it) => { ... },
+///         ast::MacroCall(it) => { ... },
+///         _ => None,
+///     }
+/// }
+/// ```
+#[macro_export]
+macro_rules! match_ast {
+    (match $node:ident { $($tt:tt)* }) => { match_ast!(match ($node) { $($tt)* }) };
+
+    (match ($node:expr) {
+        $( ast::$ast:ident($it:ident) => $res:block, )*
+        _ => $catch_all:expr $(,)?
+    }) => {{
+        $( if let Some($it) = ast::$ast::cast($node.clone()) $res else )*
+        { $catch_all }
+    }};
+}
+
+mod validation;
 
 /// This tests does not assert anything and instead just shows off the crate's API.
 #[test]

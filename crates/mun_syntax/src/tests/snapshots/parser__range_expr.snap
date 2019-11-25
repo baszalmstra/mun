@@ -1,0 +1,81 @@
+---
+source: crates/mun_syntax/src/tests/parser.rs
+expression: "fn foo() {\n    1..2;\n    3..;\n    ..4;\n    ..;\n    5..=6;\n    ..=7;\n    3..=; // Error: an inclusive range must have an end expression\n    ..=;  // Error: an inclusive range must have an end expression\n}"
+---
+SOURCE_FILE@[0; 203)
+  FUNCTION_DEF@[0; 203)
+    FN_KW@[0; 2) "fn"
+    WHITESPACE@[2; 3) " "
+    NAME@[3; 6)
+      IDENT@[3; 6) "foo"
+    PARAM_LIST@[6; 8)
+      L_PAREN@[6; 7) "("
+      R_PAREN@[7; 8) ")"
+    WHITESPACE@[8; 9) " "
+    BLOCK_EXPR@[9; 203)
+      L_CURLY@[9; 10) "{"
+      WHITESPACE@[10; 15) "\n    "
+      EXPR_STMT@[15; 20)
+        RANGE_EXPR@[15; 19)
+          LITERAL@[15; 16)
+            INT_NUMBER@[15; 16) "1"
+          DOTDOT@[16; 18) ".."
+          LITERAL@[18; 19)
+            INT_NUMBER@[18; 19) "2"
+        SEMI@[19; 20) ";"
+      WHITESPACE@[20; 25) "\n    "
+      EXPR_STMT@[25; 29)
+        RANGE_EXPR@[25; 28)
+          LITERAL@[25; 26)
+            INT_NUMBER@[25; 26) "3"
+          DOTDOT@[26; 28) ".."
+        SEMI@[28; 29) ";"
+      WHITESPACE@[29; 34) "\n    "
+      EXPR_STMT@[34; 38)
+        RANGE_EXPR@[34; 37)
+          DOTDOT@[34; 36) ".."
+          LITERAL@[36; 37)
+            INT_NUMBER@[36; 37) "4"
+        SEMI@[37; 38) ";"
+      WHITESPACE@[38; 43) "\n    "
+      EXPR_STMT@[43; 46)
+        RANGE_EXPR@[43; 45)
+          DOTDOT@[43; 45) ".."
+        SEMI@[45; 46) ";"
+      WHITESPACE@[46; 51) "\n    "
+      EXPR_STMT@[51; 57)
+        RANGE_EXPR@[51; 56)
+          LITERAL@[51; 52)
+            INT_NUMBER@[51; 52) "5"
+          DOTDOTEQ@[52; 55) "..="
+          LITERAL@[55; 56)
+            INT_NUMBER@[55; 56) "6"
+        SEMI@[56; 57) ";"
+      WHITESPACE@[57; 62) "\n    "
+      EXPR_STMT@[62; 67)
+        RANGE_EXPR@[62; 66)
+          DOTDOTEQ@[62; 65) "..="
+          LITERAL@[65; 66)
+            INT_NUMBER@[65; 66) "7"
+        SEMI@[66; 67) ";"
+      WHITESPACE@[67; 72) "\n    "
+      EXPR_STMT@[72; 77)
+        RANGE_EXPR@[72; 76)
+          LITERAL@[72; 73)
+            INT_NUMBER@[72; 73) "3"
+          DOTDOTEQ@[73; 76) "..="
+        SEMI@[76; 77) ";"
+      WHITESPACE@[77; 78) " "
+      COMMENT@[78; 134) "// Error: an inclusiv ..."
+      WHITESPACE@[134; 139) "\n    "
+      EXPR_STMT@[139; 143)
+        RANGE_EXPR@[139; 142)
+          DOTDOTEQ@[139; 142) "..="
+        SEMI@[142; 143) ";"
+      WHITESPACE@[143; 145) "  "
+      COMMENT@[145; 201) "// Error: an inclusiv ..."
+      WHITESPACE@[201; 202) "\n"
+      R_CURLY@[202; 203) "}"
+error Range([72; 76)): an inclusive range must have an end expression
+error Range([139; 142)): an inclusive range must have an end expression
+

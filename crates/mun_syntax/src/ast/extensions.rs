@@ -1,10 +1,8 @@
-use crate::ast::NameOwner;
 use crate::{
+    ast::NameOwner,
     ast::{self, AstNode},
-    T,
+    SmolStr, SyntaxNode, TextRange, T,
 };
-use crate::{SmolStr, SyntaxNode};
-use text_unit::TextRange;
 
 impl ast::Name {
     pub fn text(&self) -> &SmolStr {

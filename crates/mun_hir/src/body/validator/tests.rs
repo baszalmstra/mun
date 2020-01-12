@@ -1,5 +1,5 @@
+use crate::body::validator::ExprValidator;
 use crate::db::SourceDatabase;
-use crate::expr::validator::ExprValidator;
 use crate::{diagnostics::DiagnosticSink, ids::LocationCtx, mock::MockDatabase, Function};
 use mun_syntax::{ast, AstNode};
 use std::fmt::Write;

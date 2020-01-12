@@ -1,8 +1,7 @@
+use super::{Body, ExprId, Pat, PatId, RawExpr, Statement};
 use crate::code_model::DefWithBody;
-use crate::expr::{Expr, Pat, PatId, Statement};
 use crate::{
     arena::{Arena, RawId},
-    expr::{Body, ExprId},
     HirDatabase, Name,
 };
 use rustc_hash::FxHashMap;
@@ -151,7 +150,7 @@ fn compute_block_scopes(
 fn compute_expr_scopes(expr: ExprId, body: &Body, scopes: &mut ExprScopes, scope: ScopeId) {
     scopes.set_scope(expr, scope);
     match &body[expr] {
-        Expr::Block { statements, tail } => {
+        RawExpr::Block { statements, tail } => {
             compute_block_scopes(&statements, *tail, body, scopes, scope);
         }
         e => e.walk_child_exprs(|e| compute_expr_scopes(e, body, scopes, scope)),

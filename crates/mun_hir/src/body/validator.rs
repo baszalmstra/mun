@@ -1,4 +1,5 @@
-use crate::{diagnostics::DiagnosticSink, Body, Function, HirDatabase, InferenceResult};
+use super::Body;
+use crate::{diagnostics::DiagnosticSink, Function, HirDatabase, InferenceResult};
 use std::sync::Arc;
 
 mod uninitialized_access;

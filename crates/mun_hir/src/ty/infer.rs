@@ -3,17 +3,17 @@ use crate::{
     arena::map::ArenaMap,
     code_model::{DefWithBody, DefWithStruct, Struct},
     diagnostics::DiagnosticSink,
-    expr,
-    expr::{Body, Expr, ExprId, Literal, Pat, PatId, RecordLitField, Statement},
     name_resolution::Namespace,
     resolve::{Resolution, Resolver},
+    resolver_for_expr,
     ty::infer::diagnostics::InferenceDiagnostic,
     ty::infer::type_variable::TypeVariableTable,
     ty::lower::LowerDiagnostic,
     ty::op,
     ty::{Ty, TypableDef},
     type_ref::TypeRefId,
-    BinaryOp, Function, HirDatabase, Name, Path, TypeCtor,
+    BinaryOp, Body, ExprId, Function, HirDatabase, Literal, Name, Pat, PatId, Path, RawExpr,
+    RecordLitField, Statement, TypeCtor,
 };
 use rustc_hash::FxHashSet;
 use std::mem;
@@ -278,24 +278,23 @@ impl<'a, D: HirDatabase> InferenceResultBuilder<'a, D> {
     ) -> Ty {
         let body = Arc::clone(&self.body); // avoid borrow checker problem
         let ty = match &body[tgt_expr] {
-            Expr::Missing => Ty::Unknown,
-            Expr::Path(p) => {
+            RawExpr::Missing => Ty::Unknown,
+            RawExpr::Path(p) => {
                 // FIXME this could be more efficient...
-                let resolver = expr::resolver_for_expr(self.body.clone(), self.db, tgt_expr);
+                let resolver = resolver_for_expr(self.body.clone(), self.db, tgt_expr);
                 self.infer_path_expr(&resolver, p, tgt_expr, check_params)
                     .unwrap_or(Ty::Unknown)
             }
-            Expr::If {
+            RawExpr::If {
                 condition,
                 then_branch,
                 else_branch,
             } => self.infer_if(tgt_expr, &expected, *condition, *then_branch, *else_branch),
-            Expr::BinaryOp { lhs, rhs, op } => match op {
+            RawExpr::BinaryOp { lhs, rhs, op } => match op {
                 Some(op) => {
                     let lhs_ty = self.infer_expr(*lhs, &Expectation::none());
                     if let BinaryOp::Assignment { op: _op } = op {
-                        let resolver =
-                            expr::resolver_for_expr(self.body.clone(), self.db, tgt_expr);
+                        let resolver = resolver_for_expr(self.body.clone(), self.db, tgt_expr);
                         if !self.check_place_expression(&resolver, *lhs) {
                             self.diagnostics.push(InferenceDiagnostic::InvalidLHS {
                                 id: tgt_expr,
@@ -317,15 +316,17 @@ impl<'a, D: HirDatabase> InferenceResultBuilder<'a, D> {
                 }
                 _ => Ty::Unknown,
             },
-            Expr::Block { statements, tail } => self.infer_block(statements, *tail, expected),
-            Expr::Call { callee: call, args } => self.infer_call(tgt_expr, *call, args, expected),
-            Expr::Literal(lit) => match lit {
+            RawExpr::Block { statements, tail } => self.infer_block(statements, *tail, expected),
+            RawExpr::Call { callee: call, args } => {
+                self.infer_call(tgt_expr, *call, args, expected)
+            }
+            RawExpr::Literal(lit) => match lit {
                 Literal::String(_) => Ty::Unknown,
                 Literal::Bool(_) => Ty::simple(TypeCtor::Bool),
                 Literal::Int(_) => Ty::simple(TypeCtor::Int),
                 Literal::Float(_) => Ty::simple(TypeCtor::Float),
             },
-            Expr::Return { expr } => {
+            RawExpr::Return { expr } => {
                 if let Some(expr) = expr {
                     self.infer_expr(*expr, &Expectation::has_type(self.return_ty.clone()));
                 } else if self.return_ty != Ty::Empty {
@@ -335,12 +336,12 @@ impl<'a, D: HirDatabase> InferenceResultBuilder<'a, D> {
 
                 Ty::simple(TypeCtor::Never)
             }
-            Expr::Break { expr } => self.infer_break(tgt_expr, *expr),
-            Expr::Loop { body } => self.infer_loop_expr(tgt_expr, *body, expected),
-            Expr::While { condition, body } => {
+            RawExpr::Break { expr } => self.infer_break(tgt_expr, *expr),
+            RawExpr::Loop { body } => self.infer_loop_expr(tgt_expr, *body, expected),
+            RawExpr::While { condition, body } => {
                 self.infer_while_expr(tgt_expr, *condition, *body, expected)
             }
-            Expr::RecordLit {
+            RawExpr::RecordLit {
                 path,
                 fields,
                 spread,
@@ -372,7 +373,7 @@ impl<'a, D: HirDatabase> InferenceResultBuilder<'a, D> {
                 }
                 ty
             }
-            Expr::Field { expr, name } => {
+            RawExpr::Field { expr, name } => {
                 let receiver_ty = self.infer_expr(*expr, &Expectation::none());
                 match receiver_ty {
                     ty_app!(TypeCtor::Struct(s)) => {
@@ -399,7 +400,7 @@ impl<'a, D: HirDatabase> InferenceResultBuilder<'a, D> {
                     }
                 }
             }
-            Expr::UnaryOp { .. } => Ty::Unknown,
+            RawExpr::UnaryOp { .. } => Ty::Unknown,
             //            Expr::UnaryOp { expr: _, op: _ } => {}
             //            Expr::Block { statements: _, tail: _ } => {}
         };

@@ -4,7 +4,7 @@ use inkwell::module::Module;
 use inkwell::types::BasicTypeEnum;
 use inkwell::values::{BasicValueEnum, PointerValue};
 
-use hir::{Body, Expr, ExprId, InferenceResult};
+use hir::{Body, ExprId, InferenceResult, RawExpr};
 use std::collections::HashMap;
 
 /// A dispatch table in IR is a struct that contains pointers to all functions that are called from
@@ -118,7 +118,7 @@ impl<'a, D: IrDatabase> DispatchTableBuilder<'a, D> {
         let expr = &body[expr];
 
         // If this expression is a call, store it in the dispatch table
-        if let Expr::Call { callee, .. } = expr {
+        if let RawExpr::Call { callee, .. } = expr {
             match infer[*callee].as_callable_def() {
                 Some(hir::CallableDef::Function(def)) => self.collect_fn_def(def),
                 Some(hir::CallableDef::Struct(_)) => (),

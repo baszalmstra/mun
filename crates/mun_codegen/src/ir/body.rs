@@ -1,7 +1,7 @@
 use crate::{ir::dispatch_table::DispatchTable, ir::try_convert_any_to_basic, IrDatabase};
 use hir::{
-    ArenaId, ArithOp, BinaryOp, Body, CmpOp, Expr, ExprId, HirDisplay, InferenceResult, Literal,
-    Name, Ordering, Pat, PatId, Path, Resolution, Resolver, Statement, TypeCtor,
+    ArenaId, ArithOp, BinaryOp, Body, CmpOp, ExprId, HirDisplay, InferenceResult, Literal, Name,
+    Ordering, Pat, PatId, Path, RawExpr, Resolution, Resolver, Statement, TypeCtor,
 };
 use inkwell::{
     builder::Builder,
@@ -132,20 +132,20 @@ impl<'a, 'b, D: IrDatabase> BodyIrGenerator<'a, 'b, D> {
     fn gen_expr(&mut self, expr: ExprId) -> Option<inkwell::values::BasicValueEnum> {
         let body = self.body.clone();
         match &body[expr] {
-            Expr::Block {
+            RawExpr::Block {
                 ref statements,
                 tail,
             } => self.gen_block(expr, statements, *tail),
-            Expr::Path(ref p) => {
+            RawExpr::Path(ref p) => {
                 let resolver = hir::resolver_for_expr(self.body.clone(), self.db, expr);
                 Some(self.gen_path_expr(p, expr, &resolver))
             }
-            Expr::Literal(lit) => Some(self.gen_literal(lit)),
-            Expr::RecordLit { fields, .. } => Some(self.gen_record_lit(expr, fields)),
-            Expr::BinaryOp { lhs, rhs, op } => {
+            RawExpr::Literal(lit) => Some(self.gen_literal(lit)),
+            RawExpr::RecordLit { fields, .. } => Some(self.gen_record_lit(expr, fields)),
+            RawExpr::BinaryOp { lhs, rhs, op } => {
                 self.gen_binary_op(expr, *lhs, *rhs, op.expect("missing op"))
             }
-            Expr::Call {
+            RawExpr::Call {
                 ref callee,
                 ref args,
             } => {
@@ -158,16 +158,16 @@ impl<'a, 'b, D: IrDatabase> BodyIrGenerator<'a, 'b, D> {
                     None => panic!("expected a callable expression"),
                 }
             }
-            Expr::If {
+            RawExpr::If {
                 condition,
                 then_branch,
                 else_branch,
             } => self.gen_if(expr, *condition, *then_branch, *else_branch),
-            Expr::Return { expr: ret_expr } => self.gen_return(expr, *ret_expr),
-            Expr::Loop { body } => self.gen_loop(expr, *body),
-            Expr::While { condition, body } => self.gen_while(expr, *condition, *body),
-            Expr::Break { expr: break_expr } => self.gen_break(expr, *break_expr),
-            Expr::Field {
+            RawExpr::Return { expr: ret_expr } => self.gen_return(expr, *ret_expr),
+            RawExpr::Loop { body } => self.gen_loop(expr, *body),
+            RawExpr::While { condition, body } => self.gen_while(expr, *condition, *body),
+            RawExpr::Break { expr: break_expr } => self.gen_break(expr, *break_expr),
+            RawExpr::Field {
                 expr: receiver_expr,
                 name,
             } => {
@@ -567,11 +567,11 @@ impl<'a, 'b, D: IrDatabase> BodyIrGenerator<'a, 'b, D> {
     fn gen_place_expr(&mut self, expr: ExprId) -> PointerValue {
         let body = self.body.clone();
         match &body[expr] {
-            Expr::Path(ref p) => {
+            RawExpr::Path(ref p) => {
                 let resolver = hir::resolver_for_expr(self.body.clone(), self.db, expr);
                 self.gen_path_place_expr(p, expr, &resolver)
             }
-            Expr::Field {
+            RawExpr::Field {
                 expr: receiver_expr,
                 name,
             } => self.gen_field(expr, *receiver_expr, name),

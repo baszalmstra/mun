@@ -10,11 +10,11 @@ mod macros;
 #[macro_use]
 mod arena;
 mod adt;
+mod body;
 mod code_model;
 mod db;
 pub mod diagnostics;
 mod display;
-mod expr;
 mod ids;
 mod in_file;
 mod input;
@@ -40,22 +40,22 @@ pub use relative_path::{RelativePath, RelativePathBuf};
 
 pub use crate::{
     arena::{ArenaId, RawId},
+    body::{
+        ArithOp, BinaryOp, Body, BodySourceMap, CmpOp, ExprId, ExprScopes, Literal, LogicOp,
+        Ordering, Pat, PatId, RawExpr, RecordLitField, Statement,
+    },
     db::{
         DefDatabase, DefDatabaseStorage, HirDatabase, HirDatabaseStorage, SourceDatabase,
         SourceDatabaseStorage,
     },
     display::HirDisplay,
-    expr::{
-        resolver_for_expr, ArithOp, BinaryOp, Body, CmpOp, Expr, ExprId, ExprScopes, Literal,
-        LogicOp, Ordering, Pat, PatId, RecordLitField, Statement,
-    },
     ids::ItemLoc,
     input::{FileId, SourceRoot, SourceRootId},
     name::Name,
     name_resolution::PerNs,
     path::{Path, PathKind},
     raw::RawItems,
-    resolve::{Resolution, Resolver},
+    resolve::{resolver_for_expr, Resolution, Resolver},
     ty::{lower::CallableDef, ApplicationTy, InferenceResult, Ty, TypeCtor},
 };
 

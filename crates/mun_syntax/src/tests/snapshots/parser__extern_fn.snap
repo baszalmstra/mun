@@ -1,0 +1,20 @@
+---
+source: crates/mun_syntax/src/tests/parser.rs
+expression: pub extern fn alloc();
+---
+SOURCE_FILE@[0; 22)
+  FUNCTION_DEF@[0; 22)
+    VISIBILITY@[0; 3)
+      PUB_KW@[0; 3) "pub"
+    WHITESPACE@[3; 4) " "
+    EXTERN_KW@[4; 10) "extern"
+    WHITESPACE@[10; 11) " "
+    FN_KW@[11; 13) "fn"
+    WHITESPACE@[13; 14) " "
+    NAME@[14; 19)
+      IDENT@[14; 19) "alloc"
+    PARAM_LIST@[19; 21)
+      L_PAREN@[19; 20) "("
+      R_PAREN@[20; 21) ")"
+    SEMI@[21; 22) ";"
+

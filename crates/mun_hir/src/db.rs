@@ -100,14 +100,14 @@ pub trait HirDatabase: DefDatabase {
     #[salsa::invoke(crate::code_model::ModuleData::module_data_query)]
     fn module_data(&self, file_id: FileId) -> Arc<ModuleData>;
 
-    #[salsa::invoke(crate::expr::body_hir_query)]
-    fn body(&self, def: DefWithBody) -> Arc<crate::expr::Body>;
+    #[salsa::invoke(crate::body::body_hir_query)]
+    fn body(&self, def: DefWithBody) -> Arc<crate::Body>;
 
-    #[salsa::invoke(crate::expr::body_with_source_map_query)]
+    #[salsa::invoke(crate::body::body_with_source_map_query)]
     fn body_with_source_map(
         &self,
         def: DefWithBody,
-    ) -> (Arc<crate::expr::Body>, Arc<crate::expr::BodySourceMap>);
+    ) -> (Arc<crate::Body>, Arc<crate::BodySourceMap>);
 }
 
 fn parse_query(db: &impl SourceDatabase, file_id: FileId) -> Parse<SourceFile> {

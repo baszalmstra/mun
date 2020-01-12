@@ -2,10 +2,9 @@ pub(crate) mod src;
 
 use self::src::HasSource;
 use crate::adt::{StructData, StructFieldId};
+use crate::body::ExprValidator;
 use crate::code_model::diagnostics::ModuleDefinitionDiagnostic;
 use crate::diagnostics::DiagnosticSink;
-use crate::expr::validator::ExprValidator;
-use crate::expr::{Body, BodySourceMap};
 use crate::ids::AstItemDef;
 use crate::ids::LocationCtx;
 use crate::name::*;
@@ -18,6 +17,7 @@ use crate::{
     ids::{FunctionId, StructId},
     AsName, DefDatabase, FileId, HirDatabase, Name, Ty,
 };
+use crate::{Body, BodySourceMap};
 use mun_syntax::ast::{NameOwner, TypeAscriptionOwner, VisibilityOwner};
 use rustc_hash::FxHashMap;
 use std::sync::Arc;

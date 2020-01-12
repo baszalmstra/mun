@@ -1,6 +1,6 @@
 use super::ExprValidator;
 use crate::diagnostics::PossiblyUninitializedVariable;
-use crate::{BinaryOp, Expr, ExprId, HirDatabase, PatId, Path, Resolution, Resolver, Statement};
+use crate::{BinaryOp, ExprId, HirDatabase, PatId, Path, RawExpr, Resolution, Resolver, Statement};
 use std::collections::HashSet;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -37,17 +37,17 @@ impl<'a, 'b, 'd, D: HirDatabase> ExprValidator<'a, 'b, 'd, D> {
     ) {
         let body = self.body.clone();
         match &body[expr] {
-            Expr::Call { callee, args } => {
+            RawExpr::Call { callee, args } => {
                 self.validate_expr_access(initialized_patterns, *callee, expr_side);
                 for arg in args.iter() {
                     self.validate_expr_access(initialized_patterns, *arg, expr_side);
                 }
             }
-            Expr::Path(p) => {
-                let resolver = crate::expr::resolver_for_expr(self.body.clone(), self.db, expr);
+            RawExpr::Path(p) => {
+                let resolver = crate::resolver_for_expr(self.body.clone(), self.db, expr);
                 self.validate_path_access(initialized_patterns, &resolver, p, expr, expr_side);
             }
-            Expr::If {
+            RawExpr::If {
                 condition,
                 then_branch,
                 else_branch,
@@ -85,10 +85,10 @@ impl<'a, 'b, 'd, D: HirDatabase> ExprValidator<'a, 'b, 'd, D> {
                     };
                 }
             }
-            Expr::UnaryOp { expr, .. } => {
+            RawExpr::UnaryOp { expr, .. } => {
                 self.validate_expr_access(initialized_patterns, *expr, ExprKind::Normal);
             }
-            Expr::BinaryOp { lhs, rhs, op } => {
+            RawExpr::BinaryOp { lhs, rhs, op } => {
                 let lhs_expr_kind = match op {
                     Some(BinaryOp::Assignment { op: Some(_) }) => ExprKind::Both,
                     Some(BinaryOp::Assignment { op: None }) => ExprKind::Place,
@@ -97,7 +97,7 @@ impl<'a, 'b, 'd, D: HirDatabase> ExprValidator<'a, 'b, 'd, D> {
                 self.validate_expr_access(initialized_patterns, *lhs, lhs_expr_kind);
                 self.validate_expr_access(initialized_patterns, *rhs, ExprKind::Normal)
             }
-            Expr::Block { statements, tail } => {
+            RawExpr::Block { statements, tail } => {
                 for statement in statements.iter() {
                     match statement {
                         Statement::Let {
@@ -128,20 +128,20 @@ impl<'a, 'b, 'd, D: HirDatabase> ExprValidator<'a, 'b, 'd, D> {
                     self.validate_expr_access(initialized_patterns, *tail, ExprKind::Normal)
                 }
             }
-            Expr::Return { expr } => {
+            RawExpr::Return { expr } => {
                 if let Some(expr) = expr {
                     self.validate_expr_access(initialized_patterns, *expr, ExprKind::Normal)
                 }
             }
-            Expr::Break { expr } => {
+            RawExpr::Break { expr } => {
                 if let Some(expr) = expr {
                     self.validate_expr_access(initialized_patterns, *expr, ExprKind::Normal)
                 }
             }
-            Expr::Loop { body } => {
+            RawExpr::Loop { body } => {
                 self.validate_expr_access(initialized_patterns, *body, ExprKind::Normal)
             }
-            Expr::While { condition, body } => {
+            RawExpr::While { condition, body } => {
                 self.validate_expr_access(initialized_patterns, *condition, ExprKind::Normal);
                 self.validate_expr_access(
                     &mut initialized_patterns.clone(),
@@ -149,7 +149,7 @@ impl<'a, 'b, 'd, D: HirDatabase> ExprValidator<'a, 'b, 'd, D> {
                     ExprKind::Normal,
                 );
             }
-            Expr::RecordLit { fields, spread, .. } => {
+            RawExpr::RecordLit { fields, spread, .. } => {
                 for field in fields.iter() {
                     self.validate_expr_access(initialized_patterns, field.expr, ExprKind::Normal);
                 }
@@ -157,11 +157,11 @@ impl<'a, 'b, 'd, D: HirDatabase> ExprValidator<'a, 'b, 'd, D> {
                     self.validate_expr_access(initialized_patterns, *expr, ExprKind::Normal);
                 }
             }
-            Expr::Field { expr, .. } => {
+            RawExpr::Field { expr, .. } => {
                 self.validate_expr_access(initialized_patterns, *expr, ExprKind::Normal);
             }
-            Expr::Literal(_) => {}
-            Expr::Missing => {}
+            RawExpr::Literal(_) => {}
+            RawExpr::Missing => {}
         }
     }
 

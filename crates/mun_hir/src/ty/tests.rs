@@ -1,8 +1,8 @@
 use crate::db::SourceDatabase;
 use crate::diagnostics::DiagnosticSink;
-use crate::expr::BodySourceMap;
 use crate::ids::LocationCtx;
 use crate::mock::MockDatabase;
+use crate::BodySourceMap;
 use crate::{Function, HirDisplay, InferenceResult};
 use mun_syntax::{ast, AstNode};
 use std::fmt::Write;

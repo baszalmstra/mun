@@ -22,7 +22,7 @@ impl Server {
         let (connection, client) = Connection::memory();
 
         let worker = async_std::task::spawn(async move {
-            main_loop(connection).await.unwrap();
+            main_loop(connection, vec![]).await.unwrap();
         });
 
         Self {

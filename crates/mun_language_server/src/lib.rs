@@ -4,8 +4,13 @@ pub mod protocol;
 
 pub use main_loop::main_loop;
 
+use anyhow::anyhow;
+use async_std::sync::RwLock;
+use futures::channel::mpsc::UnboundedReceiver;
+use ra_vfs::{RootEntry, Vfs};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use std::{path::PathBuf, sync::Arc};
 
 pub type Result<T> = anyhow::Result<T>;
 
@@ -57,7 +62,26 @@ pub async fn run_server_async() -> Result<()> {
         );
     }
 
-    main_loop(connection).await?;
+    // Get the current working directory as fallback
+    let cwd = std::env::current_dir()?;
+    // Convert the root uri to a PathBuf
+    let root = initialize_params
+        .root_uri
+        .and_then(|it| it.to_file_path().ok())
+        .unwrap_or(cwd);
+    // Convert the workspace_roots, if these are empy use the root_uri or the cwd
+    let workspace_roots = initialize_params
+        .workspace_folders
+        .map(|workspaces| {
+            workspaces
+                .into_iter()
+                .filter_map(|it| it.uri.to_file_path().ok())
+                .collect::<Vec<_>>()
+        })
+        .filter(|workspaces| !workspaces.is_empty())
+        .unwrap_or_else(|| vec![root]);
+
+    main_loop(connection, workspace_roots).await?;
 
     Ok(())
 }

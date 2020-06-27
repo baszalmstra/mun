@@ -126,11 +126,11 @@ impl AnalysisDatabase {
             for add_file in root_change.added {
                 self.set_file_text(add_file.file_id, add_file.text);
                 self.set_file_relative_path(add_file.file_id, add_file.path.clone());
-                source_root.insert_file(add_file.path, add_file.file_id)
+                source_root.insert_file(add_file.file_id)
             }
             for remove_file in root_change.removed {
                 self.set_file_text(remove_file.file_id, Default::default());
-                source_root.remove_file(&remove_file.path);
+                source_root.remove_file(remove_file.file_id);
             }
             self.set_source_root(root_id, Arc::new(source_root));
         }

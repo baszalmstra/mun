@@ -81,12 +81,12 @@ fn syntax_node_identifier_range(
 ///     a: i32
 /// }
 /// ```
-pub struct DuplicateDefinition<'db, 'diag, DB: mun_hir::HirDatabase> {
-    db: &'db DB,
+pub struct DuplicateDefinition<'db, 'diag> {
+    db: &'db dyn mun_hir::HirDatabase,
     diag: &'diag mun_hir::diagnostics::DuplicateDefinition,
 }
 
-impl<'db, 'diag, DB: mun_hir::HirDatabase> Diagnostic for DuplicateDefinition<'db, 'diag, DB> {
+impl<'db, 'diag> Diagnostic for DuplicateDefinition<'db, 'diag> {
     fn range(&self) -> TextRange {
         syntax_node_identifier_range(self.diag.definition, &self.db.parse(self.diag.file))
     }
@@ -135,7 +135,7 @@ impl<'db, 'diag, DB: mun_hir::HirDatabase> Diagnostic for DuplicateDefinition<'d
     }
 }
 
-impl<'db, 'diag, DB: mun_hir::HirDatabase> DuplicateDefinition<'db, 'diag, DB> {
+impl<'db, 'diag> DuplicateDefinition<'db, 'diag> {
     /// Returns either `type` or `value` definition on the type of definition.
     fn value_or_type_string(&self) -> &'static str {
         if self.diag.definition.kind() == SyntaxKind::STRUCT_DEF {
@@ -146,9 +146,12 @@ impl<'db, 'diag, DB: mun_hir::HirDatabase> DuplicateDefinition<'db, 'diag, DB> {
     }
 }
 
-impl<'db, 'diag, DB: mun_hir::HirDatabase> DuplicateDefinition<'db, 'diag, DB> {
+impl<'db, 'diag> DuplicateDefinition<'db, 'diag> {
     /// Constructs a new instance of `DuplicateDefinition`
-    pub fn new(db: &'db DB, diag: &'diag mun_hir::diagnostics::DuplicateDefinition) -> Self {
+    pub fn new(
+        db: &'db dyn mun_hir::HirDatabase,
+        diag: &'diag mun_hir::diagnostics::DuplicateDefinition,
+    ) -> Self {
         DuplicateDefinition { db, diag }
     }
 }

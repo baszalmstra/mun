@@ -14,8 +14,12 @@ use mun_syntax::TextRange;
 
 // Provides conversion of a mun_hir::Diagnostic to a crate::Diagnostic. This requires a database for
 // most operations.
-impl<DB: mun_hir::HirDatabase> DiagnosticForWith<DB> for dyn mun_hir::Diagnostic {
-    fn with_diagnostic<R, F: FnMut(&dyn Diagnostic) -> R>(&self, with: &DB, mut f: F) -> R {
+impl DiagnosticForWith<&dyn mun_hir::HirDatabase> for dyn mun_hir::Diagnostic {
+    fn with_diagnostic<R, F: FnMut(&dyn Diagnostic) -> R>(
+        &self,
+        with: &dyn mun_hir::HirDatabase,
+        mut f: F,
+    ) -> R {
         if let Some(v) = self.downcast_ref::<mun_hir::diagnostics::UnresolvedValue>() {
             f(&unresolved_value::UnresolvedValue::new(with, v))
         } else if let Some(v) = self.downcast_ref::<mun_hir::diagnostics::UnresolvedType>() {

@@ -21,4 +21,5 @@ bytecount = "0.6.2"
 itertools = "0.10.0"
 mun_runtime = { version = "=0.3.0", path = "../mun_runtime" }
 mun_compiler = { version = "=0.3.0", path = "../mun_compiler" }
+mun_hir = { version = "=0.3.0", path = "../mun_hir" }
 tempdir = "0.3.7"

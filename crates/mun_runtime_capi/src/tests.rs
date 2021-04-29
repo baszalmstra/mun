@@ -1,5 +1,7 @@
 use crate::{error::*, gc::*, *};
+use compiler::diagnostics::emit_diagnostics;
 use compiler::{Config, DisplayColor, Driver, PathOrInline, RelativePathBuf};
+use hir::Upcast;
 use memory::gc::{GcPtr, HasIndirectionPtr, RawGcPtr};
 use runtime::UnsafeTypeInfo;
 use std::{
@@ -30,9 +32,12 @@ impl TestDriver {
             contents: text.to_owned(),
         };
         let (mut driver, file_id) = Driver::with_file(config, input).unwrap();
-        if driver
-            .emit_diagnostics(&mut stderr(), DisplayColor::Disable)
-            .unwrap()
+        if emit_diagnostics(
+            driver.database().upcast(),
+            &mut stderr(),
+            DisplayColor::Disable,
+        )
+        .unwrap()
         {
             panic!("compiler errors..")
         }

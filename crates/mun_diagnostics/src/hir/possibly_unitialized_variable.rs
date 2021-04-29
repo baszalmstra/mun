@@ -10,15 +10,13 @@ use mun_syntax::TextRange;
 /// let b = a;    // `a` is possible not yet initialized
 /// #}
 /// ```
-pub struct PossiblyUninitializedVariable<'db, 'diag, DB: mun_hir::HirDatabase> {
-    _db: &'db DB,
+pub struct PossiblyUninitializedVariable<'db, 'diag> {
+    _db: &'db dyn mun_hir::HirDatabase,
     diag: &'diag mun_hir::diagnostics::PossiblyUninitializedVariable,
     value_name: String,
 }
 
-impl<'db, 'diag, DB: mun_hir::HirDatabase> Diagnostic
-    for PossiblyUninitializedVariable<'db, 'diag, DB>
-{
+impl<'db, 'diag> Diagnostic for PossiblyUninitializedVariable<'db, 'diag> {
     fn range(&self) -> TextRange {
         self.diag.highlight_range()
     }
@@ -32,10 +30,10 @@ impl<'db, 'diag, DB: mun_hir::HirDatabase> Diagnostic
     }
 }
 
-impl<'db, 'diag, DB: mun_hir::HirDatabase> PossiblyUninitializedVariable<'db, 'diag, DB> {
+impl<'db, 'diag> PossiblyUninitializedVariable<'db, 'diag> {
     /// Constructs a new instance of `PossiblyUninitializedVariable`
     pub fn new(
-        db: &'db DB,
+        db: &'db dyn mun_hir::HirDatabase,
         diag: &'diag mun_hir::diagnostics::PossiblyUninitializedVariable,
     ) -> Self {
         let parse = db.parse(diag.file);

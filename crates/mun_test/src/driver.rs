@@ -1,4 +1,6 @@
+use compiler::diagnostics::emit_diagnostics_to_string;
 use compiler::{Config, DisplayColor, Driver, PathOrInline, RelativePathBuf};
+use hir::Upcast;
 use runtime::{Runtime, RuntimeBuilder};
 use std::{
     cell::{Ref, RefCell},
@@ -43,9 +45,9 @@ impl CompileTestDriver {
         // Initialize the driver from the fixture content
         let (_, mut driver) =
             Driver::with_package_path(temp_source_dir.path().join("mun.toml"), config).unwrap();
-        if let Some(compiler_errors) = driver
-            .emit_diagnostics_to_string(DisplayColor::Disable)
-            .expect("could not create diagnostics")
+        if let Some(compiler_errors) =
+            emit_diagnostics_to_string(driver.database().upcast(), DisplayColor::Disable)
+                .expect("could not create diagnostics")
         {
             panic!("compiler errors:\n{}", compiler_errors)
         }
@@ -73,9 +75,9 @@ impl CompileTestDriver {
             contents: text.to_owned(),
         };
         let (mut driver, file_id) = Driver::with_file(config, input).unwrap();
-        if let Some(compiler_errors) = driver
-            .emit_diagnostics_to_string(DisplayColor::Disable)
-            .expect("could not generate compiler diagnostics")
+        if let Some(compiler_errors) =
+            emit_diagnostics_to_string(driver.database().upcast(), DisplayColor::Disable)
+                .expect("could not generate compiler diagnostics")
         {
             panic!("compiler errors:\n{}", compiler_errors)
         }
@@ -96,10 +98,9 @@ impl CompileTestDriver {
     pub fn update(&mut self, path: impl AsRef<paths::RelativePath>, text: &str) {
         self.driver.set_file_text(path, text).unwrap();
 
-        let compiler_errors = self
-            .driver
-            .emit_diagnostics_to_string(DisplayColor::Disable)
-            .expect("error creating diagnostics");
+        let compiler_errors =
+            emit_diagnostics_to_string(self.driver.database().upcast(), DisplayColor::Disable)
+                .expect("error creating diagnostics");
         if let Some(compiler_errors) = compiler_errors {
             panic!("compiler errors:\n{}", compiler_errors)
         }

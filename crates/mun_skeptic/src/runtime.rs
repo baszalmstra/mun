@@ -1,6 +1,9 @@
 //! Code to perform tests on Mun code.
 
-use mun_compiler::{Config, DisplayColor, PathOrInline, RelativePathBuf};
+use mun_compiler::{
+    diagnostics::emit_diagnostics_to_string, Config, DisplayColor, PathOrInline, RelativePathBuf,
+};
+use mun_hir::Upcast;
 use mun_runtime::{invoke_fn, RuntimeBuilder};
 
 /// The type of test to create
@@ -48,9 +51,9 @@ pub fn run_test(code: &str, mode: TestMode) {
     .expect("unable to create driver from test input");
 
     // Check if the code compiles (and whether thats ok)
-    let compiler_errors = driver
-        .emit_diagnostics_to_string(DisplayColor::Auto)
-        .expect("error emitting errors");
+    let compiler_errors =
+        emit_diagnostics_to_string(driver.database().upcast(), DisplayColor::Auto)
+            .expect("error emitting errors");
     match (compiler_errors, mode.should_compile()) {
         (Some(errors), true) => {
             panic!("code contains compiler errors:\n{}", errors);

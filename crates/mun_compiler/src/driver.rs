@@ -5,10 +5,7 @@ use crate::{
     compute_source_relative_path, db::CompilerDatabase, ensure_package_output_dir, is_source_file,
     PathOrInline, RelativePath,
 };
-use hir::{
-    AstDatabase, DiagnosticSink, FileId, Module, PackageSet, SourceDatabase, SourceRoot,
-    SourceRootId, Upcast,
-};
+use hir::{FileId, Module, PackageSet, SourceDatabase, SourceRoot, SourceRootId, Upcast};
 use mun_codegen::{AssemblyIR, CodeGenDatabase, ModuleGroup, TargetAssembly};
 use paths::RelativePathBuf;
 
@@ -18,11 +15,9 @@ mod display_color;
 pub use self::config::Config;
 pub use self::display_color::DisplayColor;
 
-use crate::diagnostics_snippets::{emit_hir_diagnostic, emit_syntax_error};
 use mun_project::{Package, LOCKFILE_NAME};
 use std::{
-    collections::HashMap, convert::TryInto, io::Cursor, path::Path, path::PathBuf, sync::Arc,
-    time::Duration,
+    collections::HashMap, convert::TryInto, path::Path, path::PathBuf, sync::Arc, time::Duration,
 };
 use walkdir::WalkDir;
 
@@ -43,8 +38,9 @@ pub struct Driver {
 }
 
 impl Driver {
-    /// Constructs a driver with a specific configuration.
-    pub fn with_config(config: Config, out_dir: PathBuf) -> Self {
+    /// Constructs a driver with a specific configuration. The `out_dir` is override by the
+    /// specified path and not taken from the config.
+    fn with_config(config: Config, out_dir: PathBuf) -> Self {
         Self {
             db: CompilerDatabase::new(&config),
             out_dir,
@@ -156,6 +152,11 @@ impl Driver {
 
         Ok((package, driver))
     }
+
+    /// Returns the CompilerDatabase
+    pub fn database(&self) -> &CompilerDatabase {
+        &self.db
+    }
 }
 
 impl Driver {
@@ -206,82 +207,6 @@ impl Driver {
         self.db
             .set_file_text(*file_id, Arc::from(text.as_ref().to_owned()));
         Ok(())
-    }
-}
-
-impl Driver {
-    /// Emits all diagnostic messages currently in the database; returns true if errors were
-    /// emitted.
-    pub fn emit_diagnostics(
-        &self,
-        writer: &mut dyn std::io::Write,
-        display_color: DisplayColor,
-    ) -> Result<bool, anyhow::Error> {
-        let emit_colors = display_color.should_enable();
-        let mut has_error = false;
-
-        for package in hir::Package::all(self.db.upcast()) {
-            for module in package.modules(self.db.upcast()) {
-                if let Some(file_id) = module.file_id(self.db.upcast()) {
-                    let parse = self.db.parse(file_id);
-                    let source_code = self.db.file_text(file_id);
-                    let relative_file_path = self.db.file_relative_path(file_id);
-                    let line_index = self.db.line_index(file_id);
-
-                    // Emit all syntax diagnostics
-                    for syntax_error in parse.errors().iter() {
-                        emit_syntax_error(
-                            syntax_error,
-                            relative_file_path.as_str(),
-                            &source_code,
-                            &line_index,
-                            emit_colors,
-                            writer,
-                        )?;
-                        has_error = true;
-                    }
-
-                    // Emit all HIR diagnostics
-                    let mut error = None;
-                    module.diagnostics(
-                        self.db.upcast(),
-                        &mut DiagnosticSink::new(|d| {
-                            has_error = true;
-                            if let Err(e) =
-                                emit_hir_diagnostic(d, &self.db, file_id, emit_colors, writer)
-                            {
-                                error = Some(e)
-                            };
-                        }),
-                    );
-
-                    // If an error occurred when emitting HIR diagnostics, return early with the error.
-                    if let Some(e) = error {
-                        return Err(e.into());
-                    }
-                }
-            }
-        }
-
-        Ok(has_error)
-    }
-
-    /// Returns all diagnostics as a human readable string
-    pub fn emit_diagnostics_to_string(
-        &self,
-        display_color: DisplayColor,
-    ) -> anyhow::Result<Option<String>> {
-        let mut compiler_errors: Vec<u8> = Vec::new();
-        if !self.emit_diagnostics(&mut Cursor::new(&mut compiler_errors), display_color)? {
-            Ok(None)
-        } else {
-            Ok(Some(String::from_utf8(compiler_errors).map_err(|e| {
-                anyhow::anyhow!(
-                    "could not convert compiler diagnostics to valid UTF8: {}",
-                    e
-                )
-            })?))
-        }
     }
 }
 

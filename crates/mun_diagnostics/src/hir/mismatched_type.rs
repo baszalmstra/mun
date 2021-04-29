@@ -14,12 +14,12 @@ use mun_syntax::TextRange;
 ///     add(true, false); // type mismatch, expected i32 found bool.
 /// # }
 /// ```
-pub struct MismatchedType<'db, 'diag, DB: mun_hir::HirDatabase> {
-    db: &'db DB,
+pub struct MismatchedType<'db, 'diag> {
+    db: &'db dyn mun_hir::HirDatabase,
     diag: &'diag mun_hir::diagnostics::MismatchedType,
 }
 
-impl<'db, 'diag, DB: mun_hir::HirDatabase> Diagnostic for MismatchedType<'db, 'diag, DB> {
+impl<'db, 'diag> Diagnostic for MismatchedType<'db, 'diag> {
     fn range(&self) -> TextRange {
         self.diag.highlight_range()
     }
@@ -37,9 +37,12 @@ impl<'db, 'diag, DB: mun_hir::HirDatabase> Diagnostic for MismatchedType<'db, 'd
     }
 }
 
-impl<'db, 'diag, DB: mun_hir::HirDatabase> MismatchedType<'db, 'diag, DB> {
+impl<'db, 'diag> MismatchedType<'db, 'diag> {
     /// Constructs a new instance of `MismatchedType`
-    pub fn new(db: &'db DB, diag: &'diag mun_hir::diagnostics::MismatchedType) -> Self {
+    pub fn new(
+        db: &'db dyn mun_hir::HirDatabase,
+        diag: &'diag mun_hir::diagnostics::MismatchedType,
+    ) -> Self {
         MismatchedType { db, diag }
     }
 }

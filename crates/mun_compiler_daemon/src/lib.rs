@@ -4,6 +4,8 @@ use std::time::Duration;
 use mun_compiler::{compute_source_relative_path, is_source_file, Config, DisplayColor, Driver};
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 
+use mun_compiler::diagnostics::emit_diagnostics;
+use mun_hir::Upcast;
 use std::io::stderr;
 use std::path::Path;
 use std::sync::Arc;
@@ -26,7 +28,7 @@ pub fn compile_and_watch_manifest(
     println!("Watching: {}", source_directory.display());
 
     // Emit all current errors, and write the assemblies if no errors occured
-    if !driver.emit_diagnostics(&mut stderr(), display_color)? {
+    if !emit_diagnostics(driver.database().upcast(), &mut stderr(), display_color)? {
         driver.write_all_assemblies(false)?
     }
 
@@ -48,7 +50,8 @@ pub fn compile_and_watch_manifest(
                     let file_contents = std::fs::read_to_string(path)?;
                     log::info!("Modifying {}", relative_path);
                     driver.update_file(relative_path, file_contents);
-                    if !driver.emit_diagnostics(&mut stderr(), display_color)? {
+                    if !emit_diagnostics(driver.database().upcast(), &mut stderr(), display_color)?
+                    {
                         driver.write_all_assemblies(false)?;
                     }
                 }
@@ -57,7 +60,8 @@ pub fn compile_and_watch_manifest(
                     let file_contents = std::fs::read_to_string(path)?;
                     log::info!("Creating {}", relative_path);
                     driver.add_file(relative_path, file_contents);
-                    if !driver.emit_diagnostics(&mut stderr(), display_color)? {
+                    if !emit_diagnostics(driver.database().upcast(), &mut stderr(), display_color)?
+                    {
                         driver.write_all_assemblies(false)?;
                     }
                 }
@@ -71,7 +75,7 @@ pub fn compile_and_watch_manifest(
                     //     std::fs::remove_file(assembly_path)?;
                     // }
                     driver.remove_file(relative_path);
-                    driver.emit_diagnostics(&mut stderr(), display_color)?;
+                    emit_diagnostics(driver.database().upcast(), &mut stderr(), display_color)?;
                 }
                 Rename(ref from, ref to) => {
                     // Renaming is done by changing the relative path of the original source file but
@@ -82,7 +86,8 @@ pub fn compile_and_watch_manifest(
 
                     log::info!("Renaming {} to {}", from_relative_path, to_relative_path,);
                     driver.rename(from_relative_path, to_relative_path);
-                    if !driver.emit_diagnostics(&mut stderr(), display_color)? {
+                    if !emit_diagnostics(driver.database().upcast(), &mut stderr(), display_color)?
+                    {
                         driver.write_all_assemblies(false)?;
                     }
                 }

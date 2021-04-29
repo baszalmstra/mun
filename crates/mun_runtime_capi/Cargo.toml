@@ -27,5 +27,6 @@ rand = "0.7.2"
 
 [dev-dependencies]
 compiler = { path="../mun_compiler", package = "mun_compiler" }
+hir = { path="../mun_hir", package = "mun_hir" }
 paste = "0.1"
 tempfile = "3"

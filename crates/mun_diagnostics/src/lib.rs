@@ -64,7 +64,7 @@ pub trait DiagnosticFor {
 pub trait DiagnosticForWith<With> {
     /// Calls the specified function `f` with an instance of a [`Diagnostic`]. This can be used
     /// to perform lazy diagnostic evaluation.
-    fn with_diagnostic<R, F: FnMut(&dyn Diagnostic) -> R>(&self, with: &With, f: F) -> R;
+    fn with_diagnostic<R, F: FnMut(&dyn Diagnostic) -> R>(&self, with: With, f: F) -> R;
 }
 
 impl Into<SourceAnnotation> for SecondaryAnnotation {

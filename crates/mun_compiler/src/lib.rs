@@ -16,7 +16,9 @@ pub use crate::driver::{Config, Driver};
 pub use mun_codegen::OptimizationLevel;
 
 pub use crate::db::CompilerDatabase;
+use crate::diagnostics::emit_diagnostics;
 pub use annotate_snippets::snippet::AnnotationType;
+use hir::Upcast;
 use mun_project::Package;
 use std::ffi::OsStr;
 use std::io::stderr;
@@ -92,7 +94,7 @@ pub fn compile_manifest(
     let (_package, mut driver) = Driver::with_package_path(manifest_path, config)?;
 
     // Emit diagnostics. If one of the snippets is an error, abort gracefully.
-    if driver.emit_diagnostics(&mut stderr(), emit_colors)? {
+    if emit_diagnostics(driver.database().upcast(), &mut stderr(), emit_colors)? {
         return Ok(false);
     };
 

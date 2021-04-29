@@ -57,12 +57,12 @@ pub(crate) fn emit_syntax_error(
 /// Emits all diagnostics that are a result of HIR validation.
 pub(crate) fn emit_hir_diagnostic(
     diagnostic: &dyn hir::Diagnostic,
-    db: &impl HirDatabase,
+    db: &dyn HirDatabase,
     file_id: FileId,
     display_colors: bool,
     writer: &mut dyn std::io::Write,
 ) -> std::io::Result<()> {
-    diagnostic.with_diagnostic(db, |diagnostic| {
+    diagnostic.with_diagnostic(db, move |diagnostic| {
         emit_diagnostic(diagnostic, db, file_id, display_colors, writer)
     })
 }
@@ -70,7 +70,7 @@ pub(crate) fn emit_hir_diagnostic(
 /// Emits a diagnostic by writting a snippet to the specified `writer`.
 fn emit_diagnostic(
     diagnostic: &dyn mun_diagnostics::Diagnostic,
-    db: &impl HirDatabase,
+    db: &dyn HirDatabase,
     file_id: FileId,
     display_colors: bool,
     writer: &mut dyn std::io::Write,

@@ -9,13 +9,13 @@ use mun_syntax::{AstNode, TextRange};
 /// let a = b; // Cannot find `b` in this scope.
 /// #}
 /// ```
-pub struct UnresolvedValue<'db, 'diag, DB: mun_hir::HirDatabase> {
-    _db: &'db DB,
+pub struct UnresolvedValue<'db, 'diag> {
+    _db: &'db dyn mun_hir::HirDatabase,
     diag: &'diag mun_hir::diagnostics::UnresolvedValue,
     value_name: String,
 }
 
-impl<'db, 'diag, DB: mun_hir::HirDatabase> Diagnostic for UnresolvedValue<'db, 'diag, DB> {
+impl<'db, 'diag> Diagnostic for UnresolvedValue<'db, 'diag> {
     fn range(&self) -> TextRange {
         self.diag.highlight_range()
     }
@@ -32,9 +32,12 @@ impl<'db, 'diag, DB: mun_hir::HirDatabase> Diagnostic for UnresolvedValue<'db, '
     }
 }
 
-impl<'db, 'diag, DB: mun_hir::HirDatabase> UnresolvedValue<'db, 'diag, DB> {
+impl<'db, 'diag> UnresolvedValue<'db, 'diag> {
     /// Constructs a new instance of `UnresolvedValue`
-    pub fn new(db: &'db DB, diag: &'diag mun_hir::diagnostics::UnresolvedValue) -> Self {
+    pub fn new(
+        db: &'db dyn mun_hir::HirDatabase,
+        diag: &'diag mun_hir::diagnostics::UnresolvedValue,
+    ) -> Self {
         let parse = db.parse(diag.file);
 
         // Get the text of the value as a string

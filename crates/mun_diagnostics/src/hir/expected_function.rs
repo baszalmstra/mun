@@ -11,12 +11,12 @@ use mun_syntax::TextRange;
 ///     let b = a();    // expected function
 /// # }
 /// ```
-pub struct ExpectedFunction<'db, 'diag, DB: mun_hir::HirDatabase> {
-    db: &'db DB,
+pub struct ExpectedFunction<'db, 'diag> {
+    db: &'db dyn mun_hir::HirDatabase,
     diag: &'diag mun_hir::diagnostics::ExpectedFunction,
 }
 
-impl<'db, 'diag, DB: mun_hir::HirDatabase> Diagnostic for ExpectedFunction<'db, 'diag, DB> {
+impl<'db, 'diag> Diagnostic for ExpectedFunction<'db, 'diag> {
     fn range(&self) -> TextRange {
         self.diag.highlight_range()
     }
@@ -36,9 +36,12 @@ impl<'db, 'diag, DB: mun_hir::HirDatabase> Diagnostic for ExpectedFunction<'db, 
     }
 }
 
-impl<'db, 'diag, DB: mun_hir::HirDatabase> ExpectedFunction<'db, 'diag, DB> {
+impl<'db, 'diag> ExpectedFunction<'db, 'diag> {
     /// Constructs a new instance of `ExpectedFunction`
-    pub fn new(db: &'db DB, diag: &'diag mun_hir::diagnostics::ExpectedFunction) -> Self {
+    pub fn new(
+        db: &'db dyn mun_hir::HirDatabase,
+        diag: &'diag mun_hir::diagnostics::ExpectedFunction,
+    ) -> Self {
         ExpectedFunction { db, diag }
     }
 }

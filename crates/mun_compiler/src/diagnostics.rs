@@ -1,7 +1,84 @@
+use crate::diagnostics_snippets::{emit_hir_diagnostic, emit_syntax_error};
+use crate::DisplayColor;
+use hir::{DiagnosticSink, HirDatabase};
+use std::io::Cursor;
+
+/// Emits all diagnostic messages currently in the database; returns true if errors were
+/// emitted.
+pub fn emit_diagnostics(
+    db: &dyn HirDatabase,
+    writer: &mut dyn std::io::Write,
+    display_color: DisplayColor,
+) -> Result<bool, anyhow::Error> {
+    let emit_colors = display_color.should_enable();
+    let mut has_error = false;
+
+    for package in hir::Package::all(db) {
+        for module in package.modules(db) {
+            if let Some(file_id) = module.file_id(db) {
+                let parse = db.parse(file_id);
+                let source_code = db.file_text(file_id);
+                let relative_file_path = db.file_relative_path(file_id);
+                let line_index = db.line_index(file_id);
+
+                // Emit all syntax diagnostics
+                for syntax_error in parse.errors().iter() {
+                    emit_syntax_error(
+                        syntax_error,
+                        relative_file_path.as_str(),
+                        &source_code,
+                        &line_index,
+                        emit_colors,
+                        writer,
+                    )?;
+                    has_error = true;
+                }
+
+                // Emit all HIR diagnostics
+                let mut error = None;
+                module.diagnostics(
+                    db,
+                    &mut DiagnosticSink::new(|d| {
+                        has_error = true;
+                        if let Err(e) = emit_hir_diagnostic(d, db, file_id, emit_colors, writer) {
+                            error = Some(e)
+                        };
+                    }),
+                );
+
+                // If an error occurred when emitting HIR diagnostics, return early with the error.
+                if let Some(e) = error {
+                    return Err(e.into());
+                }
+            }
+        }
+    }
+
+    Ok(has_error)
+}
+
+/// Returns all diagnostics as a human readable string
+pub fn emit_diagnostics_to_string(
+    db: &dyn HirDatabase,
+    display_color: DisplayColor,
+) -> anyhow::Result<Option<String>> {
+    let mut compiler_errors: Vec<u8> = Vec::new();
+    if !emit_diagnostics(db, &mut Cursor::new(&mut compiler_errors), display_color)? {
+        Ok(None)
+    } else {
+        Ok(Some(String::from_utf8(compiler_errors).map_err(|e| {
+            anyhow::anyhow!(
+                "could not convert compiler diagnostics to valid UTF8: {}",
+                e
+            )
+        })?))
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use super::emit_diagnostics_to_string;
     use crate::{Config, DisplayColor, Driver, PathOrInline, RelativePathBuf};
-    use std::io::Cursor;
 
     /// Compile passed source code and return all compilation errors
     fn compilation_errors(source_code: &str) -> String {
@@ -13,17 +90,9 @@ mod tests {
         };
 
         let (driver, _) = Driver::with_file(config, input).unwrap();
-
-        let mut compilation_errors = Vec::<u8>::new();
-
-        let _ = driver
-            .emit_diagnostics(
-                &mut Cursor::new(&mut compilation_errors),
-                DisplayColor::Disable,
-            )
-            .unwrap();
-
-        String::from_utf8(compilation_errors).unwrap()
+        emit_diagnostics_to_string(driver.database(), DisplayColor::Disable)
+            .unwrap()
+            .unwrap_or_default()
     }
 
     #[test]

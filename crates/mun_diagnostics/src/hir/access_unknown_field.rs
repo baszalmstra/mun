@@ -15,13 +15,13 @@ use mun_syntax::{ast, AstNode, TextRange};
 /// let b = a.c;    // no field `c`
 /// #}
 /// ```
-pub struct AccessUnknownField<'db, 'diag, DB: mun_hir::HirDatabase> {
-    db: &'db DB,
+pub struct AccessUnknownField<'db, 'diag> {
+    db: &'db dyn mun_hir::HirDatabase,
     diag: &'diag mun_hir::diagnostics::AccessUnknownField,
     location: TextRange,
 }
 
-impl<'db, 'diag, DB: mun_hir::HirDatabase> Diagnostic for AccessUnknownField<'db, 'diag, DB> {
+impl<'db, 'diag> Diagnostic for AccessUnknownField<'db, 'diag> {
     fn range(&self) -> TextRange {
         self.location
     }
@@ -42,9 +42,12 @@ impl<'db, 'diag, DB: mun_hir::HirDatabase> Diagnostic for AccessUnknownField<'db
     }
 }
 
-impl<'db, 'diag, DB: mun_hir::HirDatabase> AccessUnknownField<'db, 'diag, DB> {
+impl<'db, 'diag> AccessUnknownField<'db, 'diag> {
     /// Constructs a new instance of `AccessUnknownField`
-    pub fn new(db: &'db DB, diag: &'diag mun_hir::diagnostics::AccessUnknownField) -> Self {
+    pub fn new(
+        db: &'db dyn mun_hir::HirDatabase,
+        diag: &'diag mun_hir::diagnostics::AccessUnknownField,
+    ) -> Self {
         let parse = db.parse(diag.file);
 
         let location = ast::FieldExpr::cast(diag.expr.to_node(&parse.syntax_node()))

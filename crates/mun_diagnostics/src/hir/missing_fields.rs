@@ -14,14 +14,14 @@ use mun_syntax::{ast, AstNode, TextRange};
 ///     let a = Foo {}; // missing field `a`
 /// # }
 /// ```
-pub struct MissingFields<'db, 'diag, DB: mun_hir::HirDatabase> {
-    db: &'db DB,
+pub struct MissingFields<'db, 'diag> {
+    db: &'db dyn mun_hir::HirDatabase,
     diag: &'diag mun_hir::diagnostics::MissingFields,
     location: TextRange,
     missing_fields: String,
 }
 
-impl<'db, 'diag, DB: mun_hir::HirDatabase> Diagnostic for MissingFields<'db, 'diag, DB> {
+impl<'db, 'diag> Diagnostic for MissingFields<'db, 'diag> {
     fn range(&self) -> TextRange {
         self.location
     }
@@ -42,9 +42,12 @@ impl<'db, 'diag, DB: mun_hir::HirDatabase> Diagnostic for MissingFields<'db, 'di
     }
 }
 
-impl<'db, 'diag, DB: mun_hir::HirDatabase> MissingFields<'db, 'diag, DB> {
+impl<'db, 'diag> MissingFields<'db, 'diag> {
     /// Constructs a new instance of `MissingFields`
-    pub fn new(db: &'db DB, diag: &'diag mun_hir::diagnostics::MissingFields) -> Self {
+    pub fn new(
+        db: &'db dyn mun_hir::HirDatabase,
+        diag: &'diag mun_hir::diagnostics::MissingFields,
+    ) -> Self {
         let parse = db.parse(diag.file);
         let missing_fields = diag
             .field_names

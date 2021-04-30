@@ -76,10 +76,9 @@ pub fn is_source_file<P: AsRef<Path>>(p: P) -> bool {
 /// Returns and creates the output dir for the specified package
 pub fn ensure_package_output_dir(
     package: &Package,
-    config: &Config,
+    out_dir: Option<PathBuf>,
 ) -> Result<PathBuf, anyhow::Error> {
-    let out_dir = config
-        .out_dir
+    let out_dir = out_dir
         .clone()
         .unwrap_or_else(|| package.root().join("target"));
     std::fs::create_dir_all(&out_dir)?;

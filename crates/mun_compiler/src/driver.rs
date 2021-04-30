@@ -42,7 +42,7 @@ impl Driver {
     /// specified path and not taken from the config.
     fn with_config(config: Config, out_dir: PathBuf) -> Self {
         Self {
-            db: CompilerDatabase::new(&config),
+            db: CompilerDatabase::new(config.target, config.optimization_lvl),
             out_dir,
             source_root: Default::default(),
             path_to_file_id: Default::default(),
@@ -108,7 +108,7 @@ impl Driver {
         let package = Package::from_file(package_path)?;
 
         // Determine output directory
-        let output_dir = ensure_package_output_dir(&package, &config)
+        let output_dir = ensure_package_output_dir(&package, config.out_dir.clone())
             .map_err(|e| anyhow::anyhow!("could not create package output directory: {}", e))?;
 
         // Construct the driver

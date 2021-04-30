@@ -17,7 +17,12 @@ anyhow = "1.0.31"
 mun_codegen = { version = "=0.3.0", path = "../mun_codegen" }
 mun_compiler = { version = "=0.3.0", path = "../mun_compiler" }
 mun_project = { version = "=0.1.0", path = "../mun_project" }
-mun_hir = { version = "=0.3.0", path = "../mun_hir" }
+hir = { version = "=0.3.0", path = "../mun_hir", package="mun_hir" }
+vfs = { version = "=0.1.0", path = "../mun_vfs", package="mun_vfs" }
 notify = "4.0"
 ctrlc = "3.1"
 log = "0.4"
+console = "0.14.1"
+indicatif = "0.15.0"
+crossbeam-channel = "0.5.0"
+threadpool="1.8.1"

@@ -1,6 +1,6 @@
-use crate::Config;
 use hir::{salsa, HirDatabase, Upcast};
-use mun_codegen::{CodeGenDatabase, CodeGenDatabaseStorage};
+use mun_codegen::{CodeGenDatabase, CodeGenDatabaseStorage, OptimizationLevel};
+use mun_target::spec::Target;
 
 /// A compiler database is a salsa database that enables increment compilation.
 #[salsa::database(
@@ -47,21 +47,15 @@ impl Upcast<dyn CodeGenDatabase> for CompilerDatabase {
 
 impl CompilerDatabase {
     /// Constructs a new database
-    pub fn new(config: &Config) -> Self {
+    pub fn new(target: Target, optimization_level: OptimizationLevel) -> Self {
         let mut db = CompilerDatabase {
             storage: Default::default(),
         };
 
-        // Set the initial configuration
-        db.set_config(config);
+        db.set_target(target);
+        db.set_optimization_level(optimization_level);
 
         db
-    }
-
-    /// Applies the given configuration to the database
-    pub fn set_config(&mut self, config: &Config) {
-        self.set_target(config.target.clone());
-        self.set_optimization_level(config.optimization_lvl);
     }
 }
 

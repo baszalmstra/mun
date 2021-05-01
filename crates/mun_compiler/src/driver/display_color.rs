@@ -1,7 +1,3 @@
-use std::env;
-#[cfg(target_os = "windows")]
-use std::process::Command;
-
 #[derive(Debug, Clone, Copy)]
 pub enum DisplayColor {
     Disable,

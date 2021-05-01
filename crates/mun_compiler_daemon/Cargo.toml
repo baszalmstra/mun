@@ -19,6 +19,7 @@ mun_compiler = { version = "=0.3.0", path = "../mun_compiler" }
 project = { version = "=0.1.0", path = "../mun_project", package="mun_project" }
 hir = { version = "=0.3.0", path = "../mun_hir", package="mun_hir" }
 vfs = { version = "=0.1.0", path = "../mun_vfs", package="mun_vfs" }
+paths = { version = "=0.1.0", path = "../mun_paths", package="mun_paths" }
 notify = "4.0"
 ctrlc = "3.1"
 log = "0.4"
@@ -26,3 +27,4 @@ console = "0.14.1"
 indicatif = "0.15.0"
 crossbeam-channel = "0.5.0"
 threadpool="1.8.1"
+parking_lot="0.11.1"

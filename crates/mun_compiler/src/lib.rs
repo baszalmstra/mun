@@ -79,7 +79,6 @@ pub fn ensure_package_output_dir(
     out_dir: Option<PathBuf>,
 ) -> Result<PathBuf, anyhow::Error> {
     let out_dir = out_dir
-        .clone()
         .unwrap_or_else(|| package.root().join("target"));
     std::fs::create_dir_all(&out_dir)?;
     Ok(out_dir)

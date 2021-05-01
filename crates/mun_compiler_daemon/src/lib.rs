@@ -1,20 +1,16 @@
-use std::sync::mpsc::channel;
-use std::time::Duration;
-
 use mun_compiler::{
-    compute_source_relative_path, is_source_file, CompilerDatabase, Config, DisplayColor, Driver,
+    CompilerDatabase, Config, DisplayColor
 };
-use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 
-use crossbeam_channel::{bounded, select, Receiver};
-use hir::Upcast;
-use indicatif::MultiProgress;
-use mun_compiler::diagnostics::emit_diagnostics;
+use crossbeam_channel::{bounded, select, unbounded, Receiver};
+use parking_lot::RwLock;
+use std::convert::TryInto;
 use std::fmt::Display;
-use std::io::stderr;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use vfs::{Monitor, VirtualFileSystem};
+use vfs::{VirtualFileSystem, MonitorMessage};
+use paths::AbsPathBuf;
+use std::collections::HashMap;
 
 /// Compiles and watches the package at the specified path. Recompiles changes that occur.
 pub fn compile_and_watch_manifest(
@@ -40,12 +36,25 @@ struct DaemonState {
     /// A receiver channel that receives an event if the user triggered Ctrl+C
     ctrlc_receiver: Receiver<()>,
 
+    /// The virtual filesystem that holds all the file contents
+    vfs: Arc<RwLock<VirtualFileSystem>>,
+
+    /// The vfs monitor
+    vfs_monitor: Box<dyn vfs::Monitor>,
+
+    /// The receiver of vfs monitor messages
+    vfs_monitor_receiver: Receiver<vfs::MonitorMessage>,
+
     /// The theme to use for any user logging
     theme: Theme,
+
+    /// A mapping of progress type to a progress bar
+    progress_bars: HashMap<String, indicatif::ProgressBar>,
 }
 
 enum Event {
     CtrlC,
+    Vfs(vfs::MonitorMessage)
 }
 
 impl DaemonState {
@@ -55,11 +64,24 @@ impl DaemonState {
         ctrlc::set_handler(move || ctrlc_sender.send(()).unwrap())
             .map_err(|e| anyhow::anyhow!("error setting ctrl+c handler: {}", e))?;
 
+        // Construct the virtual filesystem monitor
+        let (vfs_monitor_sender, vfs_monitor_receiver) = unbounded::<vfs::MonitorMessage>();
+        let vfs_monitor: vfs::NotifyMonitor = vfs::Monitor::new(Box::new(move |msg| {
+            vfs_monitor_sender
+                .send(msg)
+                .expect("error sending vfs monitor message to foreground")
+        }));
+        let vfs_monitor = Box::new(vfs_monitor) as Box<dyn vfs::Monitor>;
+
         Ok(DaemonState {
             manifest_path: manifest_path.to_path_buf(),
             db: CompilerDatabase::new(config.target, config.optimization_lvl),
             ctrlc_receiver,
+            vfs: Arc::new(RwLock::new(Default::default())),
+            vfs_monitor,
+            vfs_monitor_receiver,
             theme,
+            progress_bars: Default::default(),
         })
     }
 
@@ -67,7 +89,8 @@ impl DaemonState {
     /// Returns the first event that is received.
     fn next_event(&self) -> Option<Event> {
         select! {
-            recv(self.ctrlc_receiver) -> _ => Some(Event::CtrlC)
+            recv(self.ctrlc_receiver) -> _ => Some(Event::CtrlC),
+            recv(self.vfs_monitor_receiver) -> task => Some(Event::Vfs(task.unwrap())),
         }
     }
 
@@ -85,24 +108,97 @@ impl DaemonState {
         }
 
         while let Some(event) = self.next_event() {
-            // Handle Ctrl+C separately as an exit event
-            if matches!(event, Event::CtrlC) {
-                println!(
-                    "{} Stopping..",
-                    self.theme.style_warning.apply_to("Ctrl+C!")
-                );
-                break;
+            match event {
+                Event::CtrlC => {
+                    println!(
+                        "{} Stopping..",
+                        self.theme.style_warning.apply_to("Ctrl+C!")
+                    );
+                    break;
+                },
+                Event::Vfs(task) => self.handle_vfs_task(task)?,
             }
-
-            //self.handle_event(event)?;
         }
 
         Ok(true)
     }
 
+    /// Handles VFS events
+    pub fn handle_vfs_task(&mut self, task: vfs::MonitorMessage) -> anyhow::Result<()> {
+        match task {
+            MonitorMessage::Progress { total, done } => {
+                self.report_progress("Loading", done, total);
+            }
+            MonitorMessage::Loaded { files } => {
+                let vfs = &mut *self.vfs.write();
+                for (path, contents) in files {
+                    vfs.set_file_contents(&path, contents);
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Report progress to the user
+    fn report_progress(&mut self, name: impl AsRef<str>, done: usize, total: usize) {
+        if done == total {
+            if let Some(bar) = self.progress_bars.remove(name.as_ref()) {
+                //bar.finish_with_message(&format!("Done {}", name.as_ref().to_lowercase()))
+                bar.finish_and_clear();
+            }
+        }
+        else {
+            // Find the progress bar associated with this name and update it
+            let progress_bar = match self.progress_bars.get(name.as_ref()) {
+                None => {
+                    let bar = indicatif::ProgressBar::new(total as u64);
+                    bar.set_style(indicatif::ProgressStyle::default_bar()
+                        .template("{spinner:>3.cyan.bold} {msg:.cyan.bold} [{bar:>25}] {pos:>3}/{len:3} [{elapsed_precise}]")
+                        .progress_chars("=> "));
+                    bar.enable_steady_tick(100);
+                    bar.set_message(name.as_ref());
+                    self.progress_bars.insert(name.as_ref().to_owned(), bar.clone());
+                    bar
+                }
+                Some(bar) => {
+                    bar.clone()
+                }
+            };
+
+            progress_bar.set_length(total as u64);
+            progress_bar.set_position(done as u64);
+        }
+    }
+
     /// Fetch information
     pub fn fetch_package(&mut self) -> anyhow::Result<()> {
+        // Parse the package
         let package = project::Package::from_file(&self.manifest_path)?;
+
+        // Determine the locations to monitor/load
+        let source_dir: AbsPathBuf = package
+            .source_directory()
+            .try_into()
+            .expect("could not convert package root to absolute path");
+        let monitor_entries = vec![
+            vfs::MonitorEntry::Directories(vfs::MonitorDirectories {
+                extensions: vec!["mun".to_owned()],
+                include: vec![source_dir],
+                exclude: vec![],
+            }),
+            vfs::MonitorEntry::Files(vec![package
+                .manifest_path()
+                .to_path_buf()
+                .try_into()
+                .expect("could not convert package manifest to an absolute path")]),
+        ];
+
+        let monitor_config = vfs::MonitorConfig {
+            watch: (0..monitor_entries.len()).into_iter().collect(),
+            load: monitor_entries,
+        };
+
+        self.vfs_monitor.set_config(monitor_config);
 
         Ok(())
     }

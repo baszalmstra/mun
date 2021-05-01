@@ -10,8 +10,9 @@ use crossbeam_channel::{bounded, select, Receiver};
 use hir::Upcast;
 use indicatif::MultiProgress;
 use mun_compiler::diagnostics::emit_diagnostics;
+use std::fmt::Display;
 use std::io::stderr;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use vfs::{Monitor, VirtualFileSystem};
 
@@ -21,11 +22,18 @@ pub fn compile_and_watch_manifest(
     config: Config,
     display_color: DisplayColor,
 ) -> Result<bool, anyhow::Error> {
-    let state = DaemonState::new(config, Theme::new(display_color.should_enable()))?;
+    let state = DaemonState::new(
+        manifest_path,
+        config,
+        Theme::new(display_color.should_enable()),
+    )?;
     state.run()
 }
 
 struct DaemonState {
+    /// The location of the manifest
+    manifest_path: PathBuf,
+
     /// The compilation database that is used for everything related to compilation
     db: CompilerDatabase,
 
@@ -41,13 +49,14 @@ enum Event {
 }
 
 impl DaemonState {
-    pub fn new(config: Config, theme: Theme) -> anyhow::Result<Self> {
+    pub fn new(manifest_path: &Path, config: Config, theme: Theme) -> anyhow::Result<Self> {
         // Setup the ctrl+c handler
         let (ctrlc_sender, ctrlc_receiver) = bounded(1);
         ctrlc::set_handler(move || ctrlc_sender.send(()).unwrap())
             .map_err(|e| anyhow::anyhow!("error setting ctrl+c handler: {}", e))?;
 
         Ok(DaemonState {
+            manifest_path: manifest_path.to_path_buf(),
             db: CompilerDatabase::new(config.target, config.optimization_lvl),
             ctrlc_receiver,
             theme,
@@ -62,8 +71,19 @@ impl DaemonState {
         }
     }
 
+    /// Log an error to the output
+    fn log_error(&self, text: impl Display) {
+        eprintln!("{}", self.theme.fmt_error(format!("{}", text)));
+    }
+
     /// Runs the daemon until completion
-    pub fn run(self) -> Result<bool, anyhow::Error> {
+    pub fn run(mut self) -> Result<bool, anyhow::Error> {
+        // Start by parsing the manifest. If it's initially invalid, return right away.
+        if let Err(err) = self.fetch_package() {
+            self.log_error(err);
+            return Ok(false);
+        }
+
         while let Some(event) = self.next_event() {
             // Handle Ctrl+C separately as an exit event
             if matches!(event, Event::CtrlC) {
@@ -79,11 +99,20 @@ impl DaemonState {
 
         Ok(true)
     }
+
+    /// Fetch information
+    pub fn fetch_package(&mut self) -> anyhow::Result<()> {
+        let package = project::Package::from_file(&self.manifest_path)?;
+
+        Ok(())
+    }
 }
 
 struct Theme {
     style_info: console::Style,
     style_warning: console::Style,
+    style_error: console::Style,
+    style_error_text: console::Style,
 }
 
 impl Theme {
@@ -92,13 +121,27 @@ impl Theme {
             Self {
                 style_info: console::Style::new().bold(),
                 style_warning: console::Style::new().yellow().bold(),
+                style_error: console::Style::new().red().bold(),
+                style_error_text: console::Style::new().bold(),
             }
         } else {
+            let default_style = console::Style::new();
             Self {
-                style_info: console::Style::new(),
-                style_warning: console::Style::new(),
+                style_info: default_style.clone(),
+                style_warning: default_style.clone(),
+                style_error: default_style.clone(),
+                style_error_text: default_style.clone(),
             }
         }
+    }
+
+    /// Formats an error message.
+    pub fn fmt_error(&self, message: impl AsRef<str>) -> String {
+        format!(
+            "{} {}",
+            self.style_error.apply_to("error:"),
+            self.style_error_text.apply_to(message.as_ref())
+        )
     }
 }
 

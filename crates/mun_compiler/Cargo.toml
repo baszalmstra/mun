@@ -28,6 +28,7 @@ yansi-term = "0.1.2"
 walkdir = "2.3"
 log = "0.4"
 lockfile = "0.2.2"
+console = "0.14.1"
 
 [dev-dependencies]
 insta = "0.16"

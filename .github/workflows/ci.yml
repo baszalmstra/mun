@@ -24,6 +24,8 @@ jobs:
       - name: Install LLVM
         uses: ./.github/actions/install-llvm
 
+      - uses: Swatinem/rust-cache@v1
+
       - name: Cargo check
         uses: actions-rs/cargo@v1
         with:
@@ -48,31 +50,14 @@ jobs:
       - name: Install LLVM
         uses: ./.github/actions/install-llvm
 
-      - name: Cache cargo registry
-        uses: actions/cache@v2
-        with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-${{ github.job }}-cargo-registry-${{ hashFiles('**/Cargo.toml') }}
-
-      - name: Cache cargo index
-        uses: actions/cache@v2
-        with:
-          path: ~/.cargo/git
-          key: ${{ runner.os }}-${{ github.job }}-cargo-index-${{ hashFiles('**/Cargo.toml') }}
-
-      - name: Cache cargo build
-        if: matrix.os != 'macos-latest'
-        uses: actions/cache@v2
-        with:
-          path: target
-          key: ${{ runner.os }}-${{ github.job }}-cargo-build-target-${{ hashFiles('**/Cargo.toml') }}
-
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           override: true
           components: rustfmt
+
+      - uses: Swatinem/rust-cache@v1
 
       - name: Cargo build
         if: ${{ matrix.config.os == 'ubuntu-latest' }}
@@ -102,27 +87,6 @@ jobs:
           command: test
           args: -- --nocapture
 
-      - name: Clean cache # Otherwise the cache is much too big
-        if: matrix.os == 'ubuntu-20.04'
-        run: |
-          du -hs target
-          rm -rf target/*/incremental
-          rm -rf target/*/*/*mun_*
-          rm -rf target/*/*mun_*
-          rm -rf target/*/*/test*
-          rm -rf target/*/*test*
-          du -hs target
-      - name: Clean cache # Otherwise the cache is much too big
-        if: matrix.os == 'windows-latest'
-        run: |
-          du -hs target
-          rm -Recurse -Force target/*/incremental
-          rm -Recurse -Force target/*/*/*mun_*
-          rm -Recurse -Force target/*/*mun_*
-          rm -Recurse -Force target/*/*/test*
-          rm -Recurse -Force target/*/*test*
-          du -hs target
-
   style:
     name: Check Style
     runs-on: ubuntu-latest
@@ -138,6 +102,8 @@ jobs:
           profile: minimal
           override: true
           components: clippy, rustfmt
+
+      - uses: Swatinem/rust-cache@v1
 
       - name: Run cargo fmt
         uses: actions-rs/cargo@v1
@@ -168,6 +134,8 @@ jobs:
           profile: minimal
           override: true
           components: rustfmt
+
+      - uses: Swatinem/rust-cache@v1
 
       - name: Install LLVM
         uses: ./.github/actions/install-llvm

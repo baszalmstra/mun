@@ -134,8 +134,14 @@ impl TypeVariableTable {
         // First resolve both types as much as possible
         let a = self.replace_if_possible(a);
         let b = self.replace_if_possible(b);
-
-        self.unify_inner_trivial(&a, &b)
+        if a.equals_ctor(&b) {
+            match (a.interned(), b.interned()) {
+                (TyKind::Array(t1), TyKind::Array(t2)) => self.unify_inner(t1, t2),
+                _ => true,
+            }
+        } else {
+            self.unify_inner_trivial(&a, &b)
+        }
     }
 
     /// Handles unificiation of trivial cases.

@@ -91,6 +91,21 @@ impl<'db, 'ink> HirTypeCache<'db, 'ink> {
         ir_ty
     }
 
+    // /// Returns the IR type of the specified array type.
+    // pub fn get_array_type(&self, element_ty: hir::Ty) -> StructType<'ink> {
+    //     // Mun Arrays are represented as:
+    //     //
+    //     // ```c
+    //     // struct ArrayT {
+    //     //     usize_t len;
+    //     //     usize_t capacity;
+    //     //     T* elements;
+    //     // }
+    //     // ```
+    //
+    //     //self.context.
+    // }
+
     /// Returns the type of the struct that should be used for variables.
     pub fn get_struct_reference_type(&self, struct_ty: hir::Struct) -> BasicTypeEnum<'ink> {
         let ir_ty = self.get_struct_type(struct_ty);

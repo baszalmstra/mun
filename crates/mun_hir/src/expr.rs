@@ -11,7 +11,7 @@ use crate::name::AsName;
 use crate::type_ref::{LocalTypeRefId, TypeRef, TypeRefBuilder, TypeRefMap, TypeRefSourceMap};
 use either::Either;
 pub use mun_syntax::ast::PrefixOp as UnaryOp;
-use mun_syntax::ast::{ArgListOwner, BinOp, LoopBodyOwner, NameOwner, TypeAscriptionOwner};
+use mun_syntax::ast::{BinOp, HasArgList, HasLoopBody, HasName, HasTypeAscription};
 use mun_syntax::{ast, AstNode, AstPtr};
 use rustc_hash::FxHashMap;
 use std::ops::Index;

@@ -105,13 +105,13 @@ Grammar(
         "INT_NUMBER",
         "FLOAT_NUMBER",
         "STRING",
+        "COMMENT",
+        "WHITESPACE",
     ],
     tokens: [
         "ERROR",
         "IDENT",
         "INDEX",
-        "WHITESPACE",
-        "COMMENT",
 
         // Contextual keywords
         "GC_KW",
@@ -179,7 +179,7 @@ Grammar(
     ],
     ast: {
         "SourceFile": (
-            traits: [ "ModuleItemOwner", "FunctionDefOwner" ],
+            traits: [ "HasModuleItem", "HasFunctionDef", "HasDocComments" ],
         ),
         "ModuleItem": (
             enum: ["Use", "FunctionDef", "StructDef", "TypeAliasDef"]
@@ -187,10 +187,10 @@ Grammar(
         "Visibility": (),
         "FunctionDef": (
             traits: [
-                "NameOwner",
-                "VisibilityOwner",
-                "DocCommentsOwner",
-                "ExternOwner",
+                "HasName",
+                "HasVisibility",
+                "HasDocComments",
+                "HasExtern",
             ],
             options: [ "ParamList", ["body", "BlockExpr"], "RetType" ],
         ),
@@ -203,33 +203,33 @@ Grammar(
         "Param": (
             options: [ "Pat" ],
             traits: [
-                "TypeAscriptionOwner"
+                "HasTypeAscription"
             ],
         ),
         "StructDef": (
             options: ["MemoryTypeSpecifier"],
             traits: [
-                "NameOwner",
-                "VisibilityOwner",
-                "DocCommentsOwner",
+                "HasName",
+                "HasVisibility",
+                "HasDocComments",
             ]
         ),
         "TypeAliasDef": (
             options: ["TypeRef"],
             traits: [
-                "NameOwner",
-                "VisibilityOwner",
-                "DocCommentsOwner",
+                "HasName",
+                "HasVisibility",
+                "HasDocComments",
             ]
         ),
         "MemoryTypeSpecifier": (),
         "RecordFieldDefList": (collections: [("fields", "RecordFieldDef")]),
         "RecordFieldDef": (
             traits: [
-                "NameOwner",
-                "VisibilityOwner",
-                "DocCommentsOwner",
-                "TypeAscriptionOwner"
+                "HasName",
+                "HasVisibility",
+                "HasDocComments",
+                "HasTypeAscription"
             ]
         ),
         "TupleFieldDefList": (collections: [("fields", "TupleFieldDef")]),
@@ -238,7 +238,7 @@ Grammar(
                 "TypeRef",
             ],
             traits: [
-                "VisibilityOwner",
+                "HasVisibility",
             ]
         ),
         "LetStmt": (
@@ -247,7 +247,7 @@ Grammar(
                 ["initializer", "Expr"],
             ],
             traits: [
-                "TypeAscriptionOwner",
+                "HasTypeAscription",
             ]
         ),
         "Condition": (
@@ -262,11 +262,11 @@ Grammar(
         ),
 
         "LoopExpr": (
-            traits: ["LoopBodyOwner"]
+            traits: ["HasLoopBody"]
         ),
 
         "WhileExpr": (
-            traits: ["LoopBodyOwner"],
+            traits: ["HasLoopBody"],
             options: [ "Condition" ]
         ),
 
@@ -276,7 +276,7 @@ Grammar(
         "Literal": (),
         "ParenExpr": (options: ["Expr"]),
         "CallExpr": (
-            traits: ["ArgListOwner"],
+            traits: ["HasArgList"],
             options: [ "Expr" ],
         ),
         "FieldExpr": (
@@ -340,7 +340,7 @@ Grammar(
 
         "BindPat": (
             options: [ "Pat" ],
-            traits: ["NameOwner"]
+            traits: ["HasName"]
         ),
         "PlaceholderPat": (),
         "Pat": (
@@ -359,7 +359,7 @@ Grammar(
 
         "Use": (
             options: [["use_tree", "UseTree"]],
-            traits: ("VisibilityOwner")
+            traits: ("HasVisibility")
         ),
 
         "UseTree": (
@@ -374,7 +374,7 @@ Grammar(
         ),
 
         "Rename": (
-            traits: ("NameOwner")
+            traits: ("HasName")
         )
     }
 )

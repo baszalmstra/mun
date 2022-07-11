@@ -1,6 +1,6 @@
 use crate::SymbolKind;
 use mun_syntax::{
-    ast::{self, NameOwner},
+    ast::{self, HasName},
     match_ast, AstNode, SourceFile, SyntaxNode, TextRange, WalkEvent,
 };
 
@@ -55,12 +55,12 @@ pub(crate) fn file_structure(file: &SourceFile) -> Vec<StructureNode> {
 /// Tries to convert an ast node to something that would reside in the hierarchical file structure.
 fn try_convert_to_structure_node(node: &SyntaxNode) -> Option<StructureNode> {
     /// Create a `StructureNode` from a declaration
-    fn decl<N: NameOwner>(node: N, kind: SymbolKind) -> Option<StructureNode> {
+    fn decl<N: HasName>(node: N, kind: SymbolKind) -> Option<StructureNode> {
         decl_with_detail(&node, None, kind)
     }
 
     /// Create a `StructureNode` from a declaration with extra text detail
-    fn decl_with_detail<N: NameOwner>(
+    fn decl_with_detail<N: HasName>(
         node: &N,
         detail: Option<String>,
         kind: SymbolKind,
@@ -97,7 +97,7 @@ fn try_convert_to_structure_node(node: &SyntaxNode) -> Option<StructureNode> {
     }
 
     /// Given a `SyntaxNode` construct a `StructureNode` by referring to the type of a node.
-    fn decl_with_type_ref<N: NameOwner>(
+    fn decl_with_type_ref<N: HasName>(
         node: &N,
         type_ref: Option<ast::TypeRef>,
         kind: SymbolKind,

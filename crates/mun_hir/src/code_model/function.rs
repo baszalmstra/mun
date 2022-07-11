@@ -10,7 +10,7 @@ use crate::{
     Body, DefDatabase, DiagnosticSink, FileId, HasVisibility, HirDatabase, InferenceResult, Name,
     Ty, Visibility,
 };
-use mun_syntax::ast::TypeAscriptionOwner;
+use mun_syntax::ast::HasTypeAscription;
 use std::iter::once;
 use std::sync::Arc;
 

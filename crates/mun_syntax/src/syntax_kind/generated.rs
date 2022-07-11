@@ -99,11 +99,11 @@ pub enum SyntaxKind {
     INT_NUMBER,
     FLOAT_NUMBER,
     STRING,
+    COMMENT,
+    WHITESPACE,
     ERROR,
     IDENT,
     INDEX,
-    WHITESPACE,
-    COMMENT,
     GC_KW,
     VALUE_KW,
     SOURCE_FILE,
@@ -486,6 +486,8 @@ impl SyntaxKind {
             INT_NUMBER
             | FLOAT_NUMBER
             | STRING
+            | COMMENT
+            | WHITESPACE
         )
     }
 
@@ -568,11 +570,11 @@ impl SyntaxKind {
             INT_NUMBER => &SyntaxInfo { name: "INT_NUMBER" },
             FLOAT_NUMBER => &SyntaxInfo { name: "FLOAT_NUMBER" },
             STRING => &SyntaxInfo { name: "STRING" },
+            COMMENT => &SyntaxInfo { name: "COMMENT" },
+            WHITESPACE => &SyntaxInfo { name: "WHITESPACE" },
             ERROR => &SyntaxInfo { name: "ERROR" },
             IDENT => &SyntaxInfo { name: "IDENT" },
             INDEX => &SyntaxInfo { name: "INDEX" },
-            WHITESPACE => &SyntaxInfo { name: "WHITESPACE" },
-            COMMENT => &SyntaxInfo { name: "COMMENT" },
             GC_KW => &SyntaxInfo { name: "GC_KW" },
             VALUE_KW => &SyntaxInfo { name: "VALUE_KW" },
             SOURCE_FILE => &SyntaxInfo { name: "SOURCE_FILE" },

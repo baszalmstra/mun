@@ -3,7 +3,6 @@ mod expr_extensions;
 mod extensions;
 mod generated;
 mod token_extensions;
-mod tokens;
 mod traits;
 
 use crate::{syntax_node::SyntaxNodeChildren, SyntaxKind, SyntaxNode, SyntaxToken};
@@ -12,7 +11,6 @@ pub use self::{
     expr_extensions::*,
     extensions::{PathSegmentKind, StructKind, VisibilityKind},
     generated::*,
-    tokens::*,
     traits::*,
 };
 pub use abi::StructMemoryKind;

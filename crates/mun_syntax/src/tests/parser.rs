@@ -327,7 +327,7 @@ fn literals() {
 #[test]
 fn struct_def() {
     insta::assert_snapshot!(SourceFile::parse(
-        r#"
+    r#"
     struct Foo      // error: expected a ';', or a '{'
     struct Foo;
     struct Foo;;    // error: expected a declaration
@@ -346,27 +346,28 @@ fn struct_def() {
     struct Foo(,);  // error: expected a type
     struct Foo(f64)
     struct Foo(f64,);
+    /// Associated comment
     struct Foo(f64, i32)
     "#,
     ).debug_dump(), @r###"
-    SOURCE_FILE@0..468
-      WHITESPACE@0..5 "\n    "
-      STRUCT_DEF@5..15
+    SOURCE_FILE@0..495
+      STRUCT_DEF@0..15
+        WHITESPACE@0..5 "\n    "
         STRUCT_KW@5..11 "struct"
         WHITESPACE@11..12 " "
         NAME@12..15
           IDENT@12..15 "Foo"
-      WHITESPACE@15..21 "      "
-      COMMENT@21..55 "// error: expected a  ..."
-      WHITESPACE@55..60 "\n    "
-      STRUCT_DEF@60..71
+      STRUCT_DEF@15..71
+        WHITESPACE@15..21 "      "
+        COMMENT@21..55 "// error: expected a  ..."
+        WHITESPACE@55..60 "\n    "
         STRUCT_KW@60..66 "struct"
         WHITESPACE@66..67 " "
         NAME@67..70
           IDENT@67..70 "Foo"
         SEMI@70..71 ";"
-      WHITESPACE@71..76 "\n    "
-      STRUCT_DEF@76..87
+      STRUCT_DEF@71..87
+        WHITESPACE@71..76 "\n    "
         STRUCT_KW@76..82 "struct"
         WHITESPACE@82..83 " "
         NAME@83..86
@@ -374,10 +375,10 @@ fn struct_def() {
         SEMI@86..87 ";"
       ERROR@87..88
         SEMI@87..88 ";"
-      WHITESPACE@88..92 "    "
-      COMMENT@92..124 "// error: expected a  ..."
-      WHITESPACE@124..129 "\n    "
-      STRUCT_DEF@129..142
+      STRUCT_DEF@88..142
+        WHITESPACE@88..92 "    "
+        COMMENT@92..124 "// error: expected a  ..."
+        WHITESPACE@124..129 "\n    "
         STRUCT_KW@129..135 "struct"
         WHITESPACE@135..136 " "
         NAME@136..139
@@ -386,8 +387,8 @@ fn struct_def() {
         RECORD_FIELD_DEF_LIST@140..142
           L_CURLY@140..141 "{"
           R_CURLY@141..142 "}"
-      WHITESPACE@142..147 "\n    "
-      STRUCT_DEF@147..161
+      STRUCT_DEF@142..161
+        WHITESPACE@142..147 "\n    "
         STRUCT_KW@147..153 "struct"
         WHITESPACE@153..154 " "
         NAME@154..157
@@ -397,8 +398,8 @@ fn struct_def() {
           L_CURLY@158..159 "{"
           R_CURLY@159..160 "}"
           SEMI@160..161 ";"
-      WHITESPACE@161..166 "\n    "
-      STRUCT_DEF@166..181
+      STRUCT_DEF@161..181
+        WHITESPACE@161..166 "\n    "
         STRUCT_KW@166..172 "struct"
         WHITESPACE@172..173 " "
         NAME@173..176
@@ -410,10 +411,10 @@ fn struct_def() {
             COMMA@178..179 ","
           R_CURLY@179..180 "}"
           SEMI@180..181 ";"
-      WHITESPACE@181..182 " "
-      COMMENT@182..220 "// error: expected a  ..."
-      WHITESPACE@220..225 "\n    "
-      STRUCT_DEF@225..259
+      STRUCT_DEF@181..259
+        WHITESPACE@181..182 " "
+        COMMENT@182..220 "// error: expected a  ..."
+        WHITESPACE@220..225 "\n    "
         STRUCT_KW@225..231 "struct"
         WHITESPACE@231..232 " "
         NAME@232..235
@@ -435,8 +436,8 @@ fn struct_def() {
           COMMA@252..253 ","
           WHITESPACE@253..258 "\n    "
           R_CURLY@258..259 "}"
-      WHITESPACE@259..264 "\n    "
-      STRUCT_DEF@264..315
+      STRUCT_DEF@259..315
+        WHITESPACE@259..264 "\n    "
         STRUCT_KW@264..270 "struct"
         WHITESPACE@270..271 " "
         NAME@271..274
@@ -471,8 +472,8 @@ fn struct_def() {
           WHITESPACE@308..313 "\n    "
           R_CURLY@313..314 "}"
           SEMI@314..315 ";"
-      WHITESPACE@315..320 "\n    "
-      STRUCT_DEF@320..332
+      STRUCT_DEF@315..332
+        WHITESPACE@315..320 "\n    "
         STRUCT_KW@320..326 "struct"
         WHITESPACE@326..327 " "
         NAME@327..330
@@ -480,8 +481,8 @@ fn struct_def() {
         TUPLE_FIELD_DEF_LIST@330..332
           L_PAREN@330..331 "("
           R_PAREN@331..332 ")"
-      WHITESPACE@332..337 "\n    "
-      STRUCT_DEF@337..350
+      STRUCT_DEF@332..350
+        WHITESPACE@332..337 "\n    "
         STRUCT_KW@337..343 "struct"
         WHITESPACE@343..344 " "
         NAME@344..347
@@ -490,8 +491,8 @@ fn struct_def() {
           L_PAREN@347..348 "("
           R_PAREN@348..349 ")"
           SEMI@349..350 ";"
-      WHITESPACE@350..355 "\n    "
-      STRUCT_DEF@355..369
+      STRUCT_DEF@350..369
+        WHITESPACE@350..355 "\n    "
         STRUCT_KW@355..361 "struct"
         WHITESPACE@361..362 " "
         NAME@362..365
@@ -502,10 +503,10 @@ fn struct_def() {
             COMMA@366..367 ","
           R_PAREN@367..368 ")"
           SEMI@368..369 ";"
-      WHITESPACE@369..371 "  "
-      COMMENT@371..396 "// error: expected a  ..."
-      WHITESPACE@396..401 "\n    "
-      STRUCT_DEF@401..416
+      STRUCT_DEF@369..416
+        WHITESPACE@369..371 "  "
+        COMMENT@371..396 "// error: expected a  ..."
+        WHITESPACE@396..401 "\n    "
         STRUCT_KW@401..407 "struct"
         WHITESPACE@407..408 " "
         NAME@408..411
@@ -519,8 +520,8 @@ fn struct_def() {
                   NAME_REF@412..415
                     IDENT@412..415 "f64"
           R_PAREN@415..416 ")"
-      WHITESPACE@416..421 "\n    "
-      STRUCT_DEF@421..438
+      STRUCT_DEF@416..438
+        WHITESPACE@416..421 "\n    "
         STRUCT_KW@421..427 "struct"
         WHITESPACE@427..428 " "
         NAME@428..431
@@ -536,30 +537,32 @@ fn struct_def() {
           COMMA@435..436 ","
           R_PAREN@436..437 ")"
           SEMI@437..438 ";"
-      WHITESPACE@438..443 "\n    "
-      STRUCT_DEF@443..463
-        STRUCT_KW@443..449 "struct"
-        WHITESPACE@449..450 " "
-        NAME@450..453
-          IDENT@450..453 "Foo"
-        TUPLE_FIELD_DEF_LIST@453..463
-          L_PAREN@453..454 "("
-          TUPLE_FIELD_DEF@454..457
-            PATH_TYPE@454..457
-              PATH@454..457
-                PATH_SEGMENT@454..457
-                  NAME_REF@454..457
-                    IDENT@454..457 "f64"
-          COMMA@457..458 ","
-          WHITESPACE@458..459 " "
-          TUPLE_FIELD_DEF@459..462
-            PATH_TYPE@459..462
-              PATH@459..462
-                PATH_SEGMENT@459..462
-                  NAME_REF@459..462
-                    IDENT@459..462 "i32"
-          R_PAREN@462..463 ")"
-      WHITESPACE@463..468 "\n    "
+      STRUCT_DEF@438..490
+        WHITESPACE@438..443 "\n    "
+        COMMENT@443..465 "/// Associated comment"
+        WHITESPACE@465..470 "\n    "
+        STRUCT_KW@470..476 "struct"
+        WHITESPACE@476..477 " "
+        NAME@477..480
+          IDENT@477..480 "Foo"
+        TUPLE_FIELD_DEF_LIST@480..490
+          L_PAREN@480..481 "("
+          TUPLE_FIELD_DEF@481..484
+            PATH_TYPE@481..484
+              PATH@481..484
+                PATH_SEGMENT@481..484
+                  NAME_REF@481..484
+                    IDENT@481..484 "f64"
+          COMMA@484..485 ","
+          WHITESPACE@485..486 " "
+          TUPLE_FIELD_DEF@486..489
+            PATH_TYPE@486..489
+              PATH@486..489
+                PATH_SEGMENT@486..489
+                  NAME_REF@486..489
+                    IDENT@486..489 "i32"
+          R_PAREN@489..490 ")"
+      WHITESPACE@490..495 "\n    "
     error Offset(15): expected a ';', '{', or '('
     error Offset(87): expected a declaration
     error Offset(178): expected a field declaration
@@ -2410,8 +2413,8 @@ fn memory_type_specifier() {
     "#,
     ).debug_dump(), @r###"
     SOURCE_FILE@0..205
-      WHITESPACE@0..5 "\n    "
-      STRUCT_DEF@5..19
+      STRUCT_DEF@0..19
+        WHITESPACE@0..5 "\n    "
         STRUCT_KW@5..11 "struct"
         WHITESPACE@11..12 " "
         NAME@12..15
@@ -2421,8 +2424,8 @@ fn memory_type_specifier() {
           L_CURLY@16..17 "{"
           R_CURLY@17..18 "}"
           SEMI@18..19 ";"
-      WHITESPACE@19..24 "\n    "
-      STRUCT_DEF@24..42
+      STRUCT_DEF@19..42
+        WHITESPACE@19..24 "\n    "
         STRUCT_KW@24..30 "struct"
         MEMORY_TYPE_SPECIFIER@30..34
           L_PAREN@30..31 "("
@@ -2436,8 +2439,8 @@ fn memory_type_specifier() {
           L_CURLY@39..40 "{"
           R_CURLY@40..41 "}"
           SEMI@41..42 ";"
-      WHITESPACE@42..47 "\n    "
-      STRUCT_DEF@47..68
+      STRUCT_DEF@42..68
+        WHITESPACE@42..47 "\n    "
         STRUCT_KW@47..53 "struct"
         MEMORY_TYPE_SPECIFIER@53..60
           L_PAREN@53..54 "("
@@ -2451,8 +2454,8 @@ fn memory_type_specifier() {
           L_CURLY@65..66 "{"
           R_CURLY@66..67 "}"
           SEMI@67..68 ";"
-      WHITESPACE@68..73 "\n    "
-      STRUCT_DEF@73..90
+      STRUCT_DEF@68..90
+        WHITESPACE@68..73 "\n    "
         STRUCT_KW@73..79 "struct"
         MEMORY_TYPE_SPECIFIER@79..81
           L_PAREN@79..80 "("
@@ -2465,10 +2468,10 @@ fn memory_type_specifier() {
           L_CURLY@87..88 "{"
           R_CURLY@88..89 "}"
           SEMI@89..90 ";"
-      WHITESPACE@90..94 "    "
-      COMMENT@94..134 "// error: expected me ..."
-      WHITESPACE@134..139 "\n    "
-      STRUCT_DEF@139..159
+      STRUCT_DEF@90..159
+        WHITESPACE@90..94 "    "
+        COMMENT@94..134 "// error: expected me ..."
+        WHITESPACE@134..139 "\n    "
         STRUCT_KW@139..145 "struct"
         MEMORY_TYPE_SPECIFIER@145..150
           L_PAREN@145..146 "("
@@ -2503,8 +2506,8 @@ fn visibility() {
     "#,
     ).debug_dump(), @r###"
     SOURCE_FILE@0..140
-      WHITESPACE@0..5 "\n    "
-      STRUCT_DEF@5..23
+      STRUCT_DEF@0..23
+        WHITESPACE@0..5 "\n    "
         VISIBILITY@5..8
           PUB_KW@5..8 "pub"
         WHITESPACE@8..9 " "
@@ -2517,8 +2520,8 @@ fn visibility() {
           L_CURLY@20..21 "{"
           R_CURLY@21..22 "}"
           SEMI@22..23 ";"
-      WHITESPACE@23..28 "\n    "
-      STRUCT_DEF@28..59
+      STRUCT_DEF@23..59
+        WHITESPACE@23..28 "\n    "
         VISIBILITY@28..40
           PUB_KW@28..31 "pub"
           L_PAREN@31..32 "("

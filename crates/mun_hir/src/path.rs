@@ -1,6 +1,6 @@
 use crate::{AsName, InFile, Name};
 use mun_syntax::ast;
-use mun_syntax::ast::{NameOwner, PathSegmentKind};
+use mun_syntax::ast::{HasName, PathSegmentKind};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Path {

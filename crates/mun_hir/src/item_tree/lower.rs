@@ -15,7 +15,7 @@ use crate::{
 };
 use mun_syntax::{
     ast,
-    ast::{ExternOwner, ModuleItemOwner, NameOwner, StructKind, TypeAscriptionOwner},
+    ast::{HasExtern, HasModuleItem, HasName, HasTypeAscription, StructKind},
 };
 use smallvec::SmallVec;
 use std::{collections::HashMap, convert::TryInto, marker::PhantomData, sync::Arc};
@@ -59,7 +59,7 @@ impl Context {
     }
 
     /// Lowers all the items in the specified `ModuleItemOwner` and returns an `ItemTree`
-    pub(super) fn lower_module_items(mut self, item_owner: &impl ModuleItemOwner) -> ItemTree {
+    pub(super) fn lower_module_items(mut self, item_owner: &impl HasModuleItem) -> ItemTree {
         let top_level = item_owner
             .items()
             .flat_map(|item| self.lower_mod_item(&item))
@@ -278,7 +278,7 @@ impl Context {
     }
 
     /// Lowers an `ast::VisibilityOwner`
-    fn lower_visibility(&mut self, item: &impl ast::VisibilityOwner) -> RawVisibilityId {
+    fn lower_visibility(&mut self, item: &impl ast::HasVisibility) -> RawVisibilityId {
         let vis = RawVisibility::from_ast(item.visibility());
         self.data.visibilities.alloc(vis)
     }

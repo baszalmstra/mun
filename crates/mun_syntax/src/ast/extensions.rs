@@ -1,5 +1,5 @@
 use crate::{
-    ast::{self, child_opt, AstNode, NameOwner},
+    ast::{self, child_opt, AstNode, HasName},
     SyntaxKind, SyntaxNode, TokenText, T,
 };
 use abi::StructMemoryKind;

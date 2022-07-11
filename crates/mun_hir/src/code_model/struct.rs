@@ -10,7 +10,7 @@ use crate::{
 };
 use mun_syntax::{
     ast,
-    ast::{NameOwner, TypeAscriptionOwner, VisibilityOwner},
+    ast::{HasName, HasTypeAscription, HasVisibility as AstHasVisibility},
 };
 use std::{fmt, sync::Arc};
 

@@ -2,7 +2,6 @@
 source: crates/mun_language_server/tests/initialization.rs
 assertion_line: 50
 expression: symbols
-
 ---
 Some(
     Nested(
@@ -45,8 +44,8 @@ Some(
                 deprecated: None,
                 range: Range {
                     start: Position {
-                        line: 1,
-                        character: 0,
+                        line: 0,
+                        character: 19,
                     },
                     end: Position {
                         line: 1,

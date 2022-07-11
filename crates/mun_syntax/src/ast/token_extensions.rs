@@ -1,6 +1,192 @@
 use crate::ast::{self, AstToken};
 use std::{iter::Peekable, str::CharIndices};
 
+impl ast::Comment {
+    /// Returns the type of comment.
+    pub fn kind(&self) -> CommentKind {
+        CommentKind::try_from_text(self.text())
+            .expect("must be able to create a CommentKind from the text of an ast::Comment")
+    }
+
+    /// Returns true if this comment is a doc comment.
+    pub fn is_doc(&self) -> bool {
+        self.kind().doc.is_some()
+    }
+
+    /// Returns true if this doc comment describes the item following the comment.
+    pub fn is_outer(&self) -> bool {
+        self.kind().doc == Some(CommentPlacement::Outer)
+    }
+
+    /// Returns true if this doc comment describes the item in which it is contained.
+    pub fn is_inner(&self) -> bool {
+        self.kind().doc == Some(CommentPlacement::Inner)
+    }
+
+    /// Returns the textual content of a doc comment node as a single string with prefix and suffix
+    /// removed.
+    pub fn doc_comment(&self) -> Option<&str> {
+        let kind = self.kind();
+        match kind {
+            CommentKind {
+                shape,
+                doc: Some(_),
+            } => {
+                let prefix = kind.prefix();
+                let text = &self.text()[prefix.len()..];
+                let text = if shape == CommentShape::Block {
+                    text.strip_suffix("*/").unwrap_or(text)
+                } else {
+                    text
+                };
+                Some(text)
+            }
+            _ => None,
+        }
+    }
+}
+
+/// Defines the type of comment. Comments can be block- or line comments. They can be doc comments
+/// or regular comments.
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub struct CommentKind {
+    pub shape: CommentShape,
+    pub doc: Option<CommentPlacement>,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum CommentShape {
+    /// A single line comment, e.g.:
+    /// ```rust
+    /// // This is a line comment
+    /// ```
+    Line,
+
+    /// A block comment, e.g.
+    /// ```rust
+    /// /*
+    ///     This is a block comment
+    /// */
+    /// ```
+    Block,
+}
+
+impl CommentShape {
+    /// True if the shape is a line comment
+    pub fn is_line(self) -> bool {
+        self == CommentShape::Line
+    }
+
+    /// true if the shape is a block comment
+    pub fn is_block(self) -> bool {
+        self == CommentShape::Block
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum CommentPlacement {
+    /// The comment describes the item in which the comment is contained
+    Inner,
+
+    /// The comment describes the item it precedes.
+    Outer,
+}
+
+impl CommentKind {
+    const BY_PREFIX: [(&'static str, CommentKind); 9] = [
+        (
+            "/**/",
+            CommentKind {
+                shape: CommentShape::Block,
+                doc: None,
+            },
+        ),
+        (
+            "/***",
+            CommentKind {
+                shape: CommentShape::Block,
+                doc: None,
+            },
+        ),
+        (
+            "////",
+            CommentKind {
+                shape: CommentShape::Line,
+                doc: None,
+            },
+        ),
+        (
+            "///",
+            CommentKind {
+                shape: CommentShape::Line,
+                doc: Some(CommentPlacement::Outer),
+            },
+        ),
+        (
+            "//!",
+            CommentKind {
+                shape: CommentShape::Line,
+                doc: Some(CommentPlacement::Inner),
+            },
+        ),
+        (
+            "/**",
+            CommentKind {
+                shape: CommentShape::Block,
+                doc: Some(CommentPlacement::Outer),
+            },
+        ),
+        (
+            "/*!",
+            CommentKind {
+                shape: CommentShape::Block,
+                doc: Some(CommentPlacement::Inner),
+            },
+        ),
+        (
+            "//",
+            CommentKind {
+                shape: CommentShape::Line,
+                doc: None,
+            },
+        ),
+        (
+            "/*",
+            CommentKind {
+                shape: CommentShape::Block,
+                doc: None,
+            },
+        ),
+    ];
+
+    /// Constructs a instance from text.
+    pub(crate) fn try_from_text(text: &str) -> Option<CommentKind> {
+        let &(_prefix, kind) = CommentKind::BY_PREFIX
+            .iter()
+            .find(|&(prefix, _kind)| text.starts_with(prefix))?;
+        Some(kind)
+    }
+
+    /// Returns the prefix of this specific comment (e.g. `//!`).
+    pub fn prefix(&self) -> &'static str {
+        let &(prefix, _) = CommentKind::BY_PREFIX
+            .iter()
+            .rev()
+            .find(|(_, kind)| kind == self)
+            .unwrap();
+        prefix
+    }
+}
+
+impl ast::Whitespace {
+    /// Returns true if this whitespace spans multiple lines.
+    pub fn spans_multiple_lines(&self) -> bool {
+        let text = self.text();
+        text.find('\n')
+            .map_or(false, |idx| text[idx + 1..].contains('\n'))
+    }
+}
+
 impl ast::IntNumber {
     /// Returns a tuple containing the text part of the literal and an optional suffix. For example
     /// `1usize` will result in `("1", Some("usize"))`

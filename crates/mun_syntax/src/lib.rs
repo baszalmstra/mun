@@ -181,8 +181,8 @@ macro_rules! match_ast {
 /// This tests does not assert anything and instead just shows off the crate's API.
 #[test]
 fn api_walkthrough() {
-    use ast::ModuleItemOwner;
-    use ast::NameOwner;
+    use ast::HasModuleItem;
+    use ast::HasName;
 
     let source_code = "
         fn foo() {

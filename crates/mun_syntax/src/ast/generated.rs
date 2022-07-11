@@ -89,7 +89,7 @@ impl AstNode for BindPat {
         &self.syntax
     }
 }
-impl ast::NameOwner for BindPat {}
+impl ast::HasName for BindPat {}
 impl BindPat {
     pub fn pat(&self) -> Option<Pat> {
         super::child_opt(self)
@@ -178,7 +178,7 @@ impl AstNode for CallExpr {
         &self.syntax
     }
 }
-impl ast::ArgListOwner for CallExpr {}
+impl ast::HasArgList for CallExpr {}
 impl CallExpr {
     pub fn expr(&self) -> Option<Expr> {
         super::child_opt(self)
@@ -449,10 +449,10 @@ impl AstNode for FunctionDef {
         &self.syntax
     }
 }
-impl ast::NameOwner for FunctionDef {}
-impl ast::VisibilityOwner for FunctionDef {}
-impl ast::DocCommentsOwner for FunctionDef {}
-impl ast::ExternOwner for FunctionDef {}
+impl ast::HasName for FunctionDef {}
+impl ast::HasVisibility for FunctionDef {}
+impl ast::HasDocComments for FunctionDef {}
+impl ast::HasExtern for FunctionDef {}
 impl FunctionDef {
     pub fn param_list(&self) -> Option<ParamList> {
         super::child_opt(self)
@@ -517,7 +517,7 @@ impl AstNode for LetStmt {
         &self.syntax
     }
 }
-impl ast::TypeAscriptionOwner for LetStmt {}
+impl ast::HasTypeAscription for LetStmt {}
 impl LetStmt {
     pub fn pat(&self) -> Option<Pat> {
         super::child_opt(self)
@@ -574,7 +574,7 @@ impl AstNode for LoopExpr {
         &self.syntax
     }
 }
-impl ast::LoopBodyOwner for LoopExpr {}
+impl ast::HasLoopBody for LoopExpr {}
 impl LoopExpr {}
 
 // MemoryTypeSpecifier
@@ -763,7 +763,7 @@ impl AstNode for Param {
         &self.syntax
     }
 }
-impl ast::TypeAscriptionOwner for Param {}
+impl ast::HasTypeAscription for Param {}
 impl Param {
     pub fn pat(&self) -> Option<Pat> {
         super::child_opt(self)
@@ -1100,10 +1100,10 @@ impl AstNode for RecordFieldDef {
         &self.syntax
     }
 }
-impl ast::NameOwner for RecordFieldDef {}
-impl ast::VisibilityOwner for RecordFieldDef {}
-impl ast::DocCommentsOwner for RecordFieldDef {}
-impl ast::TypeAscriptionOwner for RecordFieldDef {}
+impl ast::HasName for RecordFieldDef {}
+impl ast::HasVisibility for RecordFieldDef {}
+impl ast::HasDocComments for RecordFieldDef {}
+impl ast::HasTypeAscription for RecordFieldDef {}
 impl RecordFieldDef {}
 
 // RecordFieldDefList
@@ -1220,7 +1220,7 @@ impl AstNode for Rename {
         &self.syntax
     }
 }
-impl ast::NameOwner for Rename {}
+impl ast::HasName for Rename {}
 impl Rename {}
 
 // RetType
@@ -1301,8 +1301,9 @@ impl AstNode for SourceFile {
         &self.syntax
     }
 }
-impl ast::ModuleItemOwner for SourceFile {}
-impl ast::FunctionDefOwner for SourceFile {}
+impl ast::HasModuleItem for SourceFile {}
+impl ast::HasFunctionDef for SourceFile {}
+impl ast::HasDocComments for SourceFile {}
 impl SourceFile {}
 
 // Stmt
@@ -1377,9 +1378,9 @@ impl AstNode for StructDef {
         &self.syntax
     }
 }
-impl ast::NameOwner for StructDef {}
-impl ast::VisibilityOwner for StructDef {}
-impl ast::DocCommentsOwner for StructDef {}
+impl ast::HasName for StructDef {}
+impl ast::HasVisibility for StructDef {}
+impl ast::HasDocComments for StructDef {}
 impl StructDef {
     pub fn memory_type_specifier(&self) -> Option<MemoryTypeSpecifier> {
         super::child_opt(self)
@@ -1408,7 +1409,7 @@ impl AstNode for TupleFieldDef {
         &self.syntax
     }
 }
-impl ast::VisibilityOwner for TupleFieldDef {}
+impl ast::HasVisibility for TupleFieldDef {}
 impl TupleFieldDef {
     pub fn type_ref(&self) -> Option<TypeRef> {
         super::child_opt(self)
@@ -1465,9 +1466,9 @@ impl AstNode for TypeAliasDef {
         &self.syntax
     }
 }
-impl ast::NameOwner for TypeAliasDef {}
-impl ast::VisibilityOwner for TypeAliasDef {}
-impl ast::DocCommentsOwner for TypeAliasDef {}
+impl ast::HasName for TypeAliasDef {}
+impl ast::HasVisibility for TypeAliasDef {}
+impl ast::HasDocComments for TypeAliasDef {}
 impl TypeAliasDef {
     pub fn type_ref(&self) -> Option<TypeRef> {
         super::child_opt(self)
@@ -1546,7 +1547,7 @@ impl AstNode for Use {
         &self.syntax
     }
 }
-impl ast::VisibilityOwner for Use {}
+impl ast::HasVisibility for Use {}
 impl Use {
     pub fn use_tree(&self) -> Option<UseTree> {
         super::child_opt(self)
@@ -1663,7 +1664,7 @@ impl AstNode for WhileExpr {
         &self.syntax
     }
 }
-impl ast::LoopBodyOwner for WhileExpr {}
+impl ast::HasLoopBody for WhileExpr {}
 impl WhileExpr {
     pub fn condition(&self) -> Option<Condition> {
         super::child_opt(self)
@@ -1738,6 +1739,60 @@ impl std::fmt::Display for String {
 impl AstToken for String {
     fn can_cast(kind: SyntaxKind) -> bool {
         kind == STRING
+    }
+    fn cast(syntax: SyntaxToken) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    fn syntax(&self) -> &SyntaxToken {
+        &self.syntax
+    }
+}
+
+// Comment
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Comment {
+    pub(crate) syntax: SyntaxToken,
+}
+impl std::fmt::Display for Comment {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(&self.syntax, f)
+    }
+}
+impl AstToken for Comment {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == COMMENT
+    }
+    fn cast(syntax: SyntaxToken) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    fn syntax(&self) -> &SyntaxToken {
+        &self.syntax
+    }
+}
+
+// Whitespace
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Whitespace {
+    pub(crate) syntax: SyntaxToken,
+}
+impl std::fmt::Display for Whitespace {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(&self.syntax, f)
+    }
+}
+impl AstToken for Whitespace {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == WHITESPACE
     }
     fn cast(syntax: SyntaxToken) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {

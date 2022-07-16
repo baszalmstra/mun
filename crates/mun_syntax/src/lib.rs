@@ -34,7 +34,7 @@ pub use crate::{
     syntax_node::{Direction, SyntaxElement, SyntaxNode, SyntaxToken, SyntaxTreeBuilder},
     token_text::TokenText,
 };
-pub use rowan::{TextRange, TextSize, WalkEvent};
+pub use rowan::{TextRange, TextSize, TokenAtOffset, WalkEvent};
 pub use smol_str::SmolStr;
 
 use rowan::GreenNode;

@@ -1,0 +1,6 @@
+---
+source: crates/mun_language_server/tests/integration/hover.rs
+assertion_line: 35
+expression: symbols
+---
+None

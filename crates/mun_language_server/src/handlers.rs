@@ -1,6 +1,34 @@
 use crate::{from_lsp, state::LanguageServerSnapshot, to_lsp, FilePosition};
-use lsp_types::{CompletionContext, CompletionItem, DocumentSymbol};
+use lsp_types::{CompletionContext, CompletionItem, DocumentSymbol, HoverContents};
 use mun_syntax::{AstNode, TextSize};
+
+/// Computes information about the token that is at the specified position. This function converts
+/// the LSP types to internal formats and calls [`LanguageServerSnapshot::hover`] to fetch the
+/// token information. Once completed, returns the result converted back to LSP types.
+pub(crate) fn handle_hover(
+    snapshot: LanguageServerSnapshot,
+    params: lsp_types::HoverParams,
+) -> anyhow::Result<Option<lsp_types::Hover>> {
+    // Convert input to internal types
+    let file_position = from_lsp::file_position(&snapshot, params.text_document_position_params)?;
+
+    // Compute the hover information
+    let info = match snapshot.analysis.hover(file_position)? {
+        None => return Ok(None),
+        Some(info) => info,
+    };
+
+    // Convert to LSP types
+    let line_index = snapshot.analysis.file_line_index(file_position.file_id)?;
+    let range = to_lsp::range(info.range, &line_index);
+
+    let hover = lsp_types::Hover {
+        contents: HoverContents::Markup(to_lsp::markup_content(info.info.markup)),
+        range: Some(range),
+    };
+
+    Ok(Some(hover))
+}
 
 /// Computes the document symbols for a specific document. Converts the LSP types to internal
 /// formats and calls [`LanguageServerSnapshot::file_structure`] to fetch the symbols in the

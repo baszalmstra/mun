@@ -1,6 +1,12 @@
 use crate::{
-    cancelation::Canceled, change::AnalysisChange, completion, db::AnalysisDatabase, diagnostics,
-    diagnostics::Diagnostic, file_structure, FilePosition,
+    cancelation::Canceled,
+    change::AnalysisChange,
+    completion,
+    db::AnalysisDatabase,
+    diagnostics::{self, Diagnostic},
+    file_structure,
+    hover::{self, HoverResult},
+    FilePosition, TextRange,
 };
 use hir::{line_index::LineIndex, AstDatabase, SourceDatabase};
 use mun_syntax::SourceFile;
@@ -9,6 +15,19 @@ use std::sync::Arc;
 
 /// Result of an operation that can be canceled.
 pub type Cancelable<T> = Result<T, Canceled>;
+
+/// Info associated with a text range.
+#[derive(Debug)]
+pub struct RangeInfo<T> {
+    pub range: TextRange,
+    pub info: T,
+}
+
+impl<T> RangeInfo<T> {
+    pub fn new(range: TextRange, info: T) -> RangeInfo<T> {
+        RangeInfo { range, info }
+    }
+}
 
 /// The `Analysis` struct is the basis of all language server operations. It maintains the current
 /// state of the source.
@@ -87,6 +106,11 @@ impl AnalysisSnapshot {
         position: FilePosition,
     ) -> Cancelable<Option<Vec<completion::CompletionItem>>> {
         self.with_db(|db| completion::completions(db, position).map(Into::into))
+    }
+
+    /// Computes hover information at the given position
+    pub fn hover(&self, position: FilePosition) -> Cancelable<Option<RangeInfo<HoverResult>>> {
+        self.with_db(|db| hover::hover(db, position))
     }
 
     /// Performs an operation on that may be Canceled.

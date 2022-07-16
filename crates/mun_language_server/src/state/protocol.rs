@@ -94,6 +94,7 @@ impl LanguageServerState {
             })?
             .on::<lsp_types::request::DocumentSymbolRequest>(handlers::handle_document_symbol)?
             .on::<lsp_types::request::Completion>(handlers::handle_completion)?
+            .on::<lsp_types::request::HoverRequest>(handlers::handle_hover)?
             .finish();
 
         Ok(())

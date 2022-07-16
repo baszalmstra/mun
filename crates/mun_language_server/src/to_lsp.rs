@@ -1,4 +1,5 @@
 use crate::completion::{CompletionItem, CompletionItemKind};
+use crate::markup::Markup;
 use crate::state::LanguageServerSnapshot;
 use crate::symbol_kind::SymbolKind;
 use lsp_types::Url;
@@ -115,5 +116,12 @@ pub(crate) fn completion_item_kind(
             SymbolKind::TypeAlias => lsp_types::CompletionItemKind::STRUCT,
         },
         CompletionItemKind::Attribute => lsp_types::CompletionItemKind::ENUM_MEMBER,
+    }
+}
+
+pub(crate) fn markup_content(markup: Markup) -> lsp_types::MarkupContent {
+    lsp_types::MarkupContent {
+        kind: lsp_types::MarkupKind::Markdown,
+        value: markup.into(),
     }
 }

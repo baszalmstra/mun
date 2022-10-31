@@ -24,7 +24,7 @@ itertools = { version = "0.10.3", default-features = false }
 mun_codegen_macros = { version = "=0.4.0-dev", path = "../mun_codegen_macros" }
 mun_target = { version = "=0.4.0-dev", path = "../mun_target" }
 once_cell = { version = "1.4.0", default-features = false }
-lld_rs = { version = "120.0.1", default-features = false }
+lld_rs = { version = "130.0.0", default-features = false }
 parking_lot = { version = "0.12.0", default-features = false }
 paste = { version = "1.0.7", default-features = false }
 mun_paths = { version= "=0.4.0-dev", path="../mun_paths"}

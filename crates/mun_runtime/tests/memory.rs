@@ -691,7 +691,7 @@ fn map_array_to_array_different_array_to_primitive_different() {
 
     b_array
         .iter()
-        .zip([b, a, b].into_iter())
+        .zip([b, a, b])
         .for_each(|(lhs, rhs)| {
             assert_eq!(lhs, rhs as i64);
         });
@@ -750,7 +750,7 @@ fn map_array_to_array_different_array_to_primitive_same() {
 
     b_array
         .iter()
-        .zip([b, a, b].into_iter())
+        .zip([b, a, b])
         .for_each(|(lhs, rhs)| {
             assert_eq!(lhs, rhs);
         });
@@ -957,7 +957,7 @@ fn map_array_to_array_different_primitive_to_array_different() {
 
     b_array
         .iter()
-        .zip([b, a, b].into_iter())
+        .zip([b, a, b])
         .for_each(|(lhs, rhs)| {
             assert_eq!(lhs.iter().count(), 1);
             assert_eq!(
@@ -1020,7 +1020,7 @@ fn map_array_to_array_different_primitive_to_array_same() {
 
     b_array
         .iter()
-        .zip([b, a, b].into_iter())
+        .zip([b, a, b])
         .for_each(|(lhs, rhs)| {
             assert_eq!(lhs.iter().count(), 1);
             assert_eq!(lhs.iter().next().expect("Array must have a value."), rhs);
@@ -1080,7 +1080,7 @@ fn map_array_to_array_different_primitive_to_primitive() {
 
     b_array
         .iter()
-        .zip([b, a, b].into_iter())
+        .zip([b, a, b])
         .for_each(|(lhs, rhs)| {
             assert_eq!(lhs, rhs as i64);
         });

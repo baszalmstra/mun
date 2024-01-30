@@ -28,9 +28,11 @@ pub struct StructDefinition<'a> {
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
+#[derive(Default)]
 pub enum StructMemoryKind {
     /// A garbage collected struct is allocated on the heap and uses reference semantics when passed
     /// around.
+    #[default]
     Gc,
 
     /// A value struct is allocated on the stack and uses value semantics when passed around.
@@ -78,11 +80,7 @@ impl<'a> StructDefinition<'a> {
     }
 }
 
-impl Default for StructMemoryKind {
-    fn default() -> Self {
-        StructMemoryKind::Gc
-    }
-}
+
 
 impl<'a> PartialEq for StructDefinition<'a> {
     fn eq(&self, other: &Self) -> bool {

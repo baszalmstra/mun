@@ -408,13 +408,13 @@ mod test {
         let mut name = MaybeUninit::uninit();
         assert_error_snapshot!(
             unsafe { mun_type_name(FFI_TYPE_NULL, name.as_mut_ptr()) },
-            @r###""invalid argument \'ty\': null pointer""###
+            @r#""invalid argument \'ty\': null pointer""#
         );
 
         let ffi_i8 = mun_type_primitive(PrimitiveType::I8);
         assert_error_snapshot!(
             unsafe { mun_type_name(ffi_i8, ptr::null_mut()) },
-            @r###""invalid argument \'name\': null pointer""###
+            @r#""invalid argument \'name\': null pointer""#
         );
 
         unsafe { mun_type_release(ffi_i8) };
@@ -483,13 +483,13 @@ mod test {
         let mut size = MaybeUninit::uninit();
         assert_error_snapshot!(
             unsafe { mun_type_alignment(FFI_TYPE_NULL, size.as_mut_ptr()) },
-            @r###""invalid argument \'ty\': null pointer""###
+            @r#""invalid argument \'ty\': null pointer""#
         );
 
         let ffi_i8 = mun_type_primitive(PrimitiveType::I8);
         assert_error_snapshot!(
             unsafe { mun_type_alignment(ffi_i8, ptr::null_mut()) },
-            @r###""invalid argument \'align\': null pointer""###
+            @r#""invalid argument \'align\': null pointer""#
         );
 
         unsafe { mun_type_release(ffi_i8) };
@@ -515,13 +515,13 @@ mod test {
         let mut ffi_u64_pointer = MaybeUninit::uninit();
         assert_error_snapshot!(
             unsafe { mun_type_pointer_type(FFI_TYPE_NULL, true, ffi_u64_pointer.as_mut_ptr()) },
-            @r###""invalid argument \'ty\': null pointer""###
+            @r#""invalid argument \'ty\': null pointer""#
         );
 
         let ffi_u64 = mun_type_primitive(PrimitiveType::U64);
         assert_error_snapshot!(
             unsafe { mun_type_pointer_type(ffi_u64, true, ptr::null_mut()) },
-            @r###""invalid argument \'pointer_ty\': null pointer""###
+            @r#""invalid argument \'pointer_ty\': null pointer""#
         );
         unsafe { mun_type_release(ffi_u64) };
     }
@@ -543,13 +543,13 @@ mod test {
         let mut ffi_u64_array = MaybeUninit::uninit();
         assert_error_snapshot!(
             unsafe { mun_type_array_type(FFI_TYPE_NULL, ffi_u64_array.as_mut_ptr()) },
-            @r###""invalid argument \'ty\': null pointer""###
+            @r#""invalid argument \'ty\': null pointer""#
         );
 
         let ffi_u64 = mun_type_primitive(PrimitiveType::U64);
         assert_error_snapshot!(
             unsafe { mun_type_array_type(ffi_u64, ptr::null_mut()) },
-            @r###""invalid argument \'array_ty\': null pointer""###
+            @r#""invalid argument \'array_ty\': null pointer""#
         );
         unsafe { mun_type_release(ffi_u64) };
     }

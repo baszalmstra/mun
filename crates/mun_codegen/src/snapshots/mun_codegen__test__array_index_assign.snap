@@ -1,11 +1,10 @@
 ---
 source: crates/mun_codegen/src/test.rs
-assertion_line: 1080
 expression: "\n    pub fn main() {\n        let a = [1,2,3,4,]\n        a[1] = 100\n    }\n    "
 ---
 ; == FILE IR (mod) =====================================
-; ModuleID = 'mod'
-source_filename = "mod"
+; ModuleID = 'fileir:mod'
+source_filename = "fileir:mod"
 
 %DispatchTable = type { i8** (i8*, i64, i8*)* }
 %"[i32]" = type { i64, i64, i32 }
@@ -51,12 +50,11 @@ body:
 }
 
 ; == GROUP IR (mod) ====================================
-; ModuleID = 'group_name'
-source_filename = "group_name"
+; ModuleID = 'filegroupir:mod'
+source_filename = "filegroupir:mod"
 
 %DispatchTable = type { i8** (i8*, i64, i8*)* }
 
 @dispatchTable = global %DispatchTable zeroinitializer
 @global_type_lookup_table = global [1 x i64*] zeroinitializer
 @allocatorHandle = unnamed_addr global i8* null
-

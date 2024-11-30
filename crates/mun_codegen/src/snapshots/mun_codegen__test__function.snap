@@ -1,12 +1,10 @@
 ---
 source: crates/mun_codegen/src/test.rs
-assertion_line: 1045
 expression: "\n    pub fn main() {\n    }\n    "
-
 ---
 ; == FILE IR (mod) =====================================
-; ModuleID = 'mod'
-source_filename = "mod"
+; ModuleID = 'fileir:mod'
+source_filename = "fileir:mod"
 
 define void @main() {
 body:
@@ -14,6 +12,5 @@ body:
 }
 
 ; == GROUP IR (mod) ====================================
-; ModuleID = 'group_name'
-source_filename = "group_name"
-
+; ModuleID = 'filegroupir:mod'
+source_filename = "filegroupir:mod"

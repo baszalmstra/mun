@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use inkwell::{module::Module, types::PointerType, values::UnnamedAddress, AddressSpace};
-use mun_hir::{HasVisibility, ModuleDef};
+use mun_hir::HasVisibility;
 use rustc_hash::FxHashSet;
 
 use super::{
@@ -37,7 +37,9 @@ pub(crate) fn gen_file_group_ir<'ink>(
     code_gen: &CodeGenContext<'_, 'ink>,
     module_group: &ModuleGroup,
 ) -> FileGroupIr<'ink> {
-    let llvm_module = code_gen.context.create_module("group_name");
+    let llvm_module = code_gen
+        .context
+        .create_module(&format!("filegroupir:{}", &module_group.name));
 
     // Use a `BTreeMap` to guarantee deterministically ordered output.
     let mut intrinsics_map = BTreeMap::new();
@@ -45,40 +47,35 @@ pub(crate) fn gen_file_group_ir<'ink>(
 
     // Collect all intrinsic functions, wrapper function, and generate struct
     // declarations.
-    for def in module_group
-        .iter()
-        .flat_map(|module| module.declarations(code_gen.db))
-    {
-        match def {
-            ModuleDef::Function(f) if !f.is_extern(code_gen.db) => {
-                intrinsics::collect_fn_body(
-                    code_gen.context,
-                    code_gen.target_machine.get_target_data(),
-                    code_gen.db,
-                    &mut intrinsics_map,
-                    &mut needs_alloc,
-                    &f.body(code_gen.db),
-                    &f.infer(code_gen.db),
-                );
+    for fun in module_group.all_functions(code_gen.db) {
+        // We don't need to generate code for extern functions
+        if fun.is_extern(code_gen.db) {
+            continue;
+        }
 
-                let fn_sig = f.ty(code_gen.db).callable_sig(code_gen.db).unwrap();
-                if f.visibility(code_gen.db).is_externally_visible()
-                    && !fn_sig.marshallable(code_gen.db)
-                {
-                    intrinsics::collect_wrapper_body(
-                        code_gen.context,
-                        code_gen.target_machine.get_target_data(),
-                        &mut intrinsics_map,
-                        &mut needs_alloc,
-                    );
-                }
-            }
-            // TODO: Extern types for functions?
-            ModuleDef::Module(_)
-            | ModuleDef::Struct(_)
-            | ModuleDef::PrimitiveType(_)
-            | ModuleDef::TypeAlias(_)
-            | ModuleDef::Function(_) => (),
+        // Collect intrinsics used within the function
+        // TODO: Move this into a database query??
+        intrinsics::collect_fn_body(
+            code_gen.context,
+            code_gen.target_machine.get_target_data(),
+            code_gen.db,
+            &mut intrinsics_map,
+            &mut needs_alloc,
+            &fun.body(code_gen.db),
+            &fun.infer(code_gen.db),
+        );
+
+        // Collect intrinsics for wrapper functions for functions that are not
+        // marshallable
+        let fn_sig = fun.ty(code_gen.db).callable_sig(code_gen.db).unwrap();
+        if fun.visibility(code_gen.db).is_externally_visible() && !fn_sig.marshallable(code_gen.db)
+        {
+            intrinsics::collect_wrapper_body(
+                code_gen.context,
+                code_gen.target_machine.get_target_data(),
+                &mut intrinsics_map,
+                &mut needs_alloc,
+            );
         }
     }
 
@@ -92,17 +89,12 @@ pub(crate) fn gen_file_group_ir<'ink>(
         &code_gen.hir_types,
         module_group,
     );
-    for def in module_group
-        .iter()
-        .flat_map(|module| module.declarations(code_gen.db))
-    {
-        if let ModuleDef::Function(f) = def {
-            // Find all functions that must be present in the dispatch table
-            if !f.is_extern(code_gen.db) {
-                let body = f.body(code_gen.db);
-                let infer = f.infer(code_gen.db);
-                dispatch_table_builder.collect_body(&body, &infer);
-            }
+    for fun in module_group.all_functions(code_gen.db) {
+        // Find all functions that must be present in the dispatch table
+        if !fun.is_extern(code_gen.db) {
+            let body = fun.body(code_gen.db);
+            let infer = fun.infer(code_gen.db);
+            dispatch_table_builder.collect_body(&body, &infer);
         }
     }
 
@@ -128,20 +120,11 @@ pub(crate) fn gen_file_group_ir<'ink>(
         module_group,
     );
 
-    // Collect all used types
-    for def in module_group
-        .iter()
-        .flat_map(|module| module.declarations(code_gen.db))
-    {
-        match def {
-            ModuleDef::Struct(s) => {
-                type_table_builder.collect_struct(s);
-            }
-            ModuleDef::Function(f) => {
-                type_table_builder.collect_fn(f);
-            }
-            ModuleDef::PrimitiveType(_) | ModuleDef::TypeAlias(_) | ModuleDef::Module(_) => (),
-        }
+    for fun in module_group.all_functions(code_gen.db) {
+        type_table_builder.collect_fn(fun);
+    }
+    for struct_def in module_group.struct_defs(code_gen.db) {
+        type_table_builder.collect_struct(struct_def);
     }
 
     let type_table = type_table_builder.build();

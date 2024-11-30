@@ -29,3 +29,4 @@ mod linker;
 mod module_group;
 mod module_partition;
 pub(crate) mod type_info;
+mod mangling;

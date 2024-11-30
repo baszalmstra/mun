@@ -1,11 +1,10 @@
 ---
 source: crates/mun_codegen/src/test.rs
-assertion_line: 1080
 expression: "\n    pub struct(gc) GcStruct(f32, f32);\n    pub struct(value) ValueStruct(f32, f32);\n\n    pub struct(gc) GcWrapper(GcStruct, ValueStruct)\n    pub struct(value) ValueWrapper(GcStruct, ValueStruct);\n\n    pub fn new_gc_struct(a: f32, b: f32) -> GcStruct {\n        GcStruct(a, b)\n    }\n\n    pub fn new_value_struct(a: f32, b: f32) -> ValueStruct {\n        ValueStruct(a, b)\n    }\n\n    pub fn new_gc_wrapper(a: GcStruct, b: ValueStruct) -> GcWrapper {\n        GcWrapper(a, b)\n    }\n\n    pub fn new_value_wrapper(a: GcStruct, b: ValueStruct) -> ValueWrapper {\n        ValueWrapper(a, b)\n    }\n    "
 ---
 ; == FILE IR (mod) =====================================
-; ModuleID = 'mod'
-source_filename = "mod"
+; ModuleID = 'fileir:mod'
+source_filename = "fileir:mod"
 
 %DispatchTable = type { i8** (i8*, i8*)* }
 %GcStruct = type { float, float }
@@ -104,12 +103,11 @@ body:
 }
 
 ; == GROUP IR (mod) ====================================
-; ModuleID = 'group_name'
-source_filename = "group_name"
+; ModuleID = 'filegroupir:mod'
+source_filename = "filegroupir:mod"
 
 %DispatchTable = type { i8** (i8*, i8*)* }
 
 @dispatchTable = global %DispatchTable zeroinitializer
 @global_type_lookup_table = global [5 x i64*] zeroinitializer
 @allocatorHandle = unnamed_addr global i8* null
-

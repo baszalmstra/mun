@@ -14,6 +14,22 @@ use crate::{
 };
 
 #[test]
+fn impl_fn() {
+    test_snapshot_unoptimized(
+        "impl_fn",
+        r"
+    pub struct Foo(i32);
+
+    impl Foo {
+        pub fn new() -> Foo {
+            Foo(0)
+        }
+    }
+    ",
+    );
+}
+
+#[test]
 fn array_index_assign() {
     test_snapshot_unoptimized(
         "array_index_assign",

@@ -1,11 +1,10 @@
 ---
 source: crates/mun_codegen/src/test.rs
-assertion_line: 1080
 expression: "\n    struct(gc) Foo { a: i32 };\n\n    pub fn main(c:i32) -> i32 {\n        let b = Foo { a: c + 5 }\n        b.a\n    }\n    "
 ---
 ; == FILE IR (mod) =====================================
-; ModuleID = 'mod'
-source_filename = "mod"
+; ModuleID = 'fileir:mod'
+source_filename = "fileir:mod"
 
 %DispatchTable = type { i8** (i8*, i8*)* }
 %Foo = type { i32 }
@@ -39,12 +38,11 @@ body:
 }
 
 ; == GROUP IR (mod) ====================================
-; ModuleID = 'group_name'
-source_filename = "group_name"
+; ModuleID = 'filegroupir:mod'
+source_filename = "filegroupir:mod"
 
 %DispatchTable = type { i8** (i8*, i8*)* }
 
 @dispatchTable = global %DispatchTable zeroinitializer
 @global_type_lookup_table = global [2 x i64*] zeroinitializer
 @allocatorHandle = unnamed_addr global i8* null
-

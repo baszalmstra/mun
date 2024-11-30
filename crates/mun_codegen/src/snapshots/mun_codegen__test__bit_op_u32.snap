@@ -3,8 +3,8 @@ source: crates/mun_codegen/src/test.rs
 expression: "\n    pub fn not(a: u32) -> u32 { !a }\n    pub fn bitand(a: u32, b: u32) -> u32 { a & b }\n    pub fn bitor(a: u32, b: u32) -> u32 { a | b }\n    pub fn bitxor(a: u32, b: u32) -> u32 { a ^ b }\n                        "
 ---
 ; == FILE IR (mod) =====================================
-; ModuleID = 'mod'
-source_filename = "mod"
+; ModuleID = 'fileir:mod'
+source_filename = "fileir:mod"
 
 @global_type_lookup_table = external global [1 x i64*]
 
@@ -33,8 +33,7 @@ body:
 }
 
 ; == GROUP IR (mod) ====================================
-; ModuleID = 'group_name'
-source_filename = "group_name"
+; ModuleID = 'filegroupir:mod'
+source_filename = "filegroupir:mod"
 
 @global_type_lookup_table = global [1 x i64*] zeroinitializer
-

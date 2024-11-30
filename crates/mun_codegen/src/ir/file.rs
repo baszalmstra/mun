@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 use inkwell::module::Module;
-use mun_hir::{HasVisibility, ModuleDef};
+use mun_hir::{HasVisibility};
 
 use super::body::ExternalGlobals;
 use crate::{
@@ -28,41 +28,48 @@ pub(crate) fn gen_file_ir<'ink>(
     group_ir: &FileGroupIr<'ink>,
     module_group: &ModuleGroup,
 ) -> FileIr<'ink> {
-    let llvm_module = code_gen.context.create_module(&module_group.name);
+    let llvm_module = code_gen
+        .context
+        .create_module(&format!("fileir:{}", &module_group.name));
 
     let hir_types = &code_gen.hir_types;
 
     // Generate all exposed function and wrapper function signatures.
-    // Use a `BTreeMap` to guarantee deterministically ordered output.ures
+    // Use a `BTreeMap` to guarantee deterministically ordered output.
     let mut functions = HashMap::new();
     let mut type_definitions = HashSet::new();
     let mut wrapper_functions = BTreeMap::new();
-    for def in module_group
-        .iter()
-        .flat_map(|module| module.declarations(code_gen.db))
-    {
-        if let ModuleDef::Function(f) = def {
-            if !f.is_extern(code_gen.db) {
-                let fun = function::gen_prototype(code_gen.db, hir_types, f, &llvm_module);
-                functions.insert(f, fun);
+    for fun_def in module_group.all_functions(code_gen.db) {
+        // We don't need to generate code for extern functions
+        if fun_def.is_extern(code_gen.db) {
+            continue;
+        }
 
-                let fn_sig = f.ty(code_gen.db).callable_sig(code_gen.db).unwrap();
-                if f.visibility(code_gen.db).is_externally_visible()
-                    && !fn_sig.marshallable(code_gen.db)
-                {
-                    let wrapper_fun = function::gen_public_prototype(
-                        code_gen.db,
-                        &code_gen.hir_types,
-                        f,
-                        &llvm_module,
-                    );
-                    wrapper_functions.insert(f, wrapper_fun);
-                }
-            }
+        // Generate a function value for the function. This function does not generate a
+        // body for the `mun_hir::Function`. That task is left to the `gen_body`
+        // function
+        let fun_ir = function::gen_prototype(code_gen.db, hir_types, fun_def, &llvm_module);
+        functions.insert(fun_def, fun_ir);
+
+        // Generate a function value for the function that is usable from the public
+        // API.
+        let fn_sig = fun_def.ty(code_gen.db).callable_sig(code_gen.db).unwrap();
+        if fun_def.visibility(code_gen.db).is_externally_visible()
+            && !fn_sig.marshallable(code_gen.db)
+        {
+            let wrapper_fun = function::gen_public_prototype(
+                code_gen.db,
+                &code_gen.hir_types,
+                fun_def,
+                &llvm_module,
+            );
+            wrapper_functions.insert(fun_def, wrapper_fun);
         }
-        if let ModuleDef::Struct(s) = def {
-            type_definitions.insert(s.ty(code_gen.db));
-        }
+    }
+
+    // Generate type definitions for all structs
+    for struct_def in module_group.struct_defs(code_gen.db) {
+        type_definitions.insert(struct_def.ty(code_gen.db));
     }
 
     let external_globals = {
@@ -89,11 +96,11 @@ pub(crate) fn gen_file_ir<'ink>(
     let fn_pass_manager = function::create_pass_manager(&llvm_module, code_gen.optimization_level);
 
     // Generate the function bodies
-    for (hir_function, llvm_function) in functions.iter() {
+    for (&hir_function, llvm_function) in functions.iter() {
         let mut code_gen = BodyIrGenerator::new(
             code_gen.context,
             code_gen.db,
-            (*hir_function, *llvm_function),
+            (hir_function, *llvm_function),
             &functions,
             &group_ir.dispatch_table,
             &group_ir.type_table,
@@ -106,11 +113,11 @@ pub(crate) fn gen_file_ir<'ink>(
         fn_pass_manager.run_on(llvm_function);
     }
 
-    for (hir_function, llvm_function) in wrapper_functions.iter() {
+    for (&hir_function, llvm_function) in wrapper_functions.iter() {
         let mut code_gen = BodyIrGenerator::new(
             code_gen.context,
             code_gen.db,
-            (*hir_function, *llvm_function),
+            (hir_function, *llvm_function),
             &functions,
             &group_ir.dispatch_table,
             &group_ir.type_table,

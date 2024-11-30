@@ -3,8 +3,8 @@ source: crates/mun_codegen/src/test.rs
 expression: "\n    pub fn foo(a:i32) -> i32 {\n        let a = a+1;\n        {\n            let a = a+2;\n        }\n        a+3\n    }\n\n    pub fn bar(a:i32) -> i32 {\n        let a = a+1;\n        let a = {\n            let a = a+2;\n            a\n        }\n        a+3\n    }\n    "
 ---
 ; == FILE IR (mod) =====================================
-; ModuleID = 'mod'
-source_filename = "mod"
+; ModuleID = 'fileir:mod'
+source_filename = "fileir:mod"
 
 @global_type_lookup_table = external global [1 x i64*]
 
@@ -24,8 +24,7 @@ body:
 }
 
 ; == GROUP IR (mod) ====================================
-; ModuleID = 'group_name'
-source_filename = "group_name"
+; ModuleID = 'filegroupir:mod'
+source_filename = "filegroupir:mod"
 
 @global_type_lookup_table = global [1 x i64*] zeroinitializer
-

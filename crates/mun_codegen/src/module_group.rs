@@ -6,6 +6,7 @@ use std::{
     iter::FromIterator,
 };
 
+use itertools::chain;
 use mun_hir::{HasVisibility, HirDatabase};
 use mun_hir_input::FileId;
 use rustc_hash::{FxHashMap, FxHashSet};
@@ -128,5 +129,65 @@ impl ModuleGroup {
     /// Returns the filename for this module group
     pub fn relative_file_path(&self) -> mun_paths::RelativePathBuf {
         mun_paths::RelativePathBuf::from(self.name.replace("::", "$"))
+    }
+
+    /// Returns all free function definitions in the module group.
+    pub fn free_functions<'this, 'db>(
+        &'this self,
+        db: &'db dyn HirDatabase,
+    ) -> impl Iterator<Item = mun_hir::Function> + 'this
+    where
+        'db: 'this,
+    {
+        self.iter()
+            .flat_map(|module| module.declarations(db))
+            .filter_map(|def| match def {
+                mun_hir::ModuleDef::Function(f) => Some(f),
+                _ => None,
+            })
+    }
+
+    /// Returns all functions defined in impl blocks in the module group.
+    pub fn impl_functions<'this, 'db>(
+        &'this self,
+        db: &'db dyn HirDatabase,
+    ) -> impl Iterator<Item = mun_hir::Function> + 'this
+    where
+        'db: 'this,
+    {
+        self.iter()
+            .flat_map(|module| module.impls(db))
+            .flat_map(|imp| imp.items(db))
+            .filter_map(|def| match def {
+                mun_hir::AssocItem::Function(f) => Some(f),
+            })
+    }
+
+    /// Returns all function definitions in the module group. This includes both
+    /// free functions and functions defined in impl blocks.
+    pub fn all_functions<'this, 'db>(
+        &'this self,
+        db: &'db dyn HirDatabase,
+    ) -> impl Iterator<Item = mun_hir::Function> + 'this
+    where
+        'db: 'this,
+    {
+        chain!(self.free_functions(db), self.impl_functions(db))
+    }
+
+    /// Returns all struct definitions in the module group.
+    pub fn struct_defs<'this, 'db>(
+        &'this self,
+        db: &'db dyn HirDatabase,
+    ) -> impl Iterator<Item = mun_hir::Struct> + 'this
+    where
+        'db: 'this,
+    {
+        self.iter()
+            .flat_map(|module| module.declarations(db))
+            .filter_map(|def| match def {
+                mun_hir::ModuleDef::Struct(s) => Some(s),
+                _ => None,
+            })
     }
 }

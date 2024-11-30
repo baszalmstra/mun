@@ -35,6 +35,8 @@ pub trait CodeGenDatabase: mun_hir::HirDatabase + mun_db::Upcast<dyn mun_hir::Hi
     /// Returns a fully linked shared object for the specified module.
     #[salsa::invoke(crate::assembly::build_target_assembly)]
     fn target_assembly(&self, module_group: ModuleGroupId) -> Arc<TargetAssembly>;
+
+
 }
 
 /// Constructs the primary interface to the complete machine description for the
